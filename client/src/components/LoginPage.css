@@ -1,0 +1,82 @@
+/* Outer container */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f5f7fa;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  /* Unified card */
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  /* Top banner image inside card */
+  .login-banner-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  /* Login form inside card */
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    padding: 30px 25px;
+  }
+  
+  .login-form input {
+    margin-bottom: 15px;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .login-form input:focus {
+    border-color: #2575fc;
+    box-shadow: 0 0 5px rgba(37, 117, 252, 0.4);
+    outline: none;
+  }
+  
+  .login-form button {
+    padding: 12px;
+    font-size: 18px;
+    background: #2575fc;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+  
+  .login-form button:hover {
+    background: #1a5cc7;
+    transform: translateY(-2px);
+  }
+  
+  /* Mobile adjustments */
+  @media (max-width: 480px) {
+    .login-card {
+      max-width: 90%;
+    }
+  
+    .login-form {
+      padding: 25px 20px;
+    }
+  
+    .login-form input,
+    .login-form button {
+      font-size: 16px;
+    }
+  }
+  

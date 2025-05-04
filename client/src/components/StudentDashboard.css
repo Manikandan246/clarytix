@@ -1,0 +1,100 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f7f9fc;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.dashboard-container {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+}
+
+.dashboard-logo {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    margin-bottom: 20px;
+    object-fit: contain;
+}
+
+.welcome {
+    font-size: 28px;
+    margin: 10px 0 5px;
+}
+
+.section-title {
+    font-size: 20px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.quiz-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+}
+
+.quiz-table th,
+.quiz-table td {
+    background: #ffffff;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.quiz-table th {
+    background-color: #f0f0f0;
+    font-weight: 600;
+}
+
+.start-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.start-btn:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 600px) {
+    .dashboard-container {
+        padding: 20px;
+    }
+
+    .dashboard-logo {
+        max-width: 140px;
+    }
+
+    .welcome {
+        font-size: 22px;
+    }
+
+    .quiz-table th,
+    .quiz-table td {
+        padding: 8px 10px;
+    }
+
+    .start-btn {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+}

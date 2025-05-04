@@ -1,0 +1,73 @@
+.quiz-container {
+    width: 90%;
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.school-logo {
+    width: 100%;            /* makes it match the container width */
+    max-width: 600px;       /* optional limit */
+    height: auto;
+    margin-bottom: 20px;
+    object-fit: contain;
+}
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333333;
+}
+
+.question-block {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.question-text {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+}
+
+.option-label {
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.option-label input[type="radio"] {
+    margin-right: 10px;
+}
+
+.option-label.selected {
+    background-color: #e6f7ff;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+button {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
