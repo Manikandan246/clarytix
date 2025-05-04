@@ -7,19 +7,14 @@ const path = require('path');
 const cors = require('cors');
 const app = express();
 
-// Enable CORS (during local dev)
-app.use(cors({
-    origin: 'http://localhost:3000'
-}));
+// Enable CORS (must be at the top!)
+app.use(cors());
+
 
 app.use(express.json()); // to parse JSON bodies
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const upload = multer({ dest: 'uploads/' });
-
-// =====================
-// Routes
-// =====================
 
 // Login route
 app.post('/login', async (req, res) => {
@@ -40,7 +35,7 @@ app.post('/login', async (req, res) => {
             res.json({
                 success: true,
                 userId: user.id,
-                username: user.username,
+                username: user.username, 
                 role: user.role,
                 schoolId: user.school_id,
                 schoolLogoUrl: user.logo_url,
@@ -285,7 +280,7 @@ app.get('/admin/quizzes', async (req, res) => {
              FROM questions q
              JOIN topics t ON q.topic_id = t.id
              JOIN subjects s ON t.subject_id = s.id
-             GROUP BY q.class, s.name, t.name, t.id`,
+             GROUP BY q.class, s.name, t.name, t.id`
         );
 
         client.release();
@@ -413,8 +408,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-
-
-
-
 
