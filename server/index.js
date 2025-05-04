@@ -8,7 +8,9 @@ const cors = require('cors');
 const app = express();
 
 // Enable CORS (must be at the top!)
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://clarytix.netlify.app']
+}));
 
 
 app.use(express.json()); // to parse JSON bodies
