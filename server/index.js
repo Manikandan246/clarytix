@@ -395,11 +395,7 @@ app.get('/admin/performance-metrics', async (req, res) => {
 // =====================
 // Serve React static files (client/build) in production
 // =====================
-app.use(express.static(path.join(__dirname, '../client/build')));
 
-app.get('/*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-});
 
 // =====================
 // Start server
