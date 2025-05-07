@@ -77,8 +77,11 @@ app.post('/admin/upload-questions', upload.single('file'), async (req, res) => {
         const subjectId = subjectResult.rows[0].id;
 
         const topicResult = await client.query(
-            'INSERT INTO topics (subject_id, name) VALUES ($1, $2) ON CONFLICT (subject_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id',
-            [subjectId, topicName]
+            `INSERT INTO topics (subject_id, name, class)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (subject_id, name, class) DO UPDATE SET name = EXCLUDED.name
+             RETURNING id`,
+            [subjectId, topicName, className]
         );
         const topicId = topicResult.rows[0].id;
 
