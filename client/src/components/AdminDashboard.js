@@ -13,7 +13,7 @@ function AdminDashboard() {
     useEffect(() => {
         const fetchQuizzes = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/admin/quizzes?schoolId=${schoolId}`);
+                const response = await fetch(`https://clarytix-backend.onrender.com/admin/quizzes?schoolId=${schoolId}`);
                 const data = await response.json();
                 if (data.success) {
                     setQuizzes(data.availableQuizzes);
@@ -35,33 +35,38 @@ function AdminDashboard() {
     return (
         <div className="admin-dashboard-container">
             <img src={schoolLogo} alt="School Logo" className="school-logo-full" />
-            <h2>Welcome Admin</h2>
+            <h2 className="admin-welcome">Welcome Admin</h2>
 
-            <table className="performance-table">
-                <thead>
-                    <tr>
-                        <th>Class</th>
-                        <th>Subject</th>
-                        <th>Topic</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {quizzes.map((quiz, index) => (
-                        <tr key={index}>
-                            <td>{quiz.class}</td>
-                            <td>{quiz.subject}</td>
-                            <td>{quiz.topic}</td>
-                            <td>
-                                <button onClick={() => handleTrackPerformance(quiz.topic_id)}>
-                                    Track Performance
-                                </button>
-                            </td>
+            <div className="table-wrapper">
+                <table className="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Class</th>
+                            <th>Subject</th>
+                            <th>Topic</th>
+                            <th>Action</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
-            <LogoutButton />
+                    </thead>
+                    <tbody>
+                        {quizzes.map((quiz, index) => (
+                            <tr key={index}>
+                                <td>{quiz.class}</td>
+                                <td>{quiz.subject}</td>
+                                <td className="nowrap">{quiz.topic}</td>
+                                <td>
+                                    <button className="track-btn" onClick={() => handleTrackPerformance(quiz.topic_id)}>
+                                        Track Performance
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="logout-container">
+                <LogoutButton />
+            </div>
         </div>
     );
 }

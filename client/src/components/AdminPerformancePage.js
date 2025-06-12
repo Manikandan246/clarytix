@@ -47,7 +47,7 @@ function AdminPerformancePage() {
             try {
                 console.log('✅ Sending topicId:', topicId, 'schoolId:', schoolId);
 
-                const response = await fetch(`http://localhost:5000/admin/performance-metrics?topicId=${topicId}&schoolId=${schoolId}`);
+                const response = await fetch(`https://clarytix-backend.onrender.com/admin/performance-metrics?topicId=${topicId}&schoolId=${schoolId}`);
                 const data = await response.json();
                 console.log('✅ Received metrics response:', data);
 
