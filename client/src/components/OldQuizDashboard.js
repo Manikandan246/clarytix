@@ -1,34 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './StudentDashboard.css';
+import './OldQuizDashboard.css';
 import LogoutButton from './LogoutButton';
 
-function StudentDashboard() {
+function OldQuizDashboard() {
     const studentName = localStorage.getItem('username') || 'Student';
     const schoolLogo = localStorage.getItem('schoolLogoUrl');
     const studentId = localStorage.getItem('userId');
-    const [availableQuizzes, setAvailableQuizzes] = useState([]);
+    const [quizHistory, setQuizHistory] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchQuizzes = async () => {
+        const fetchQuizHistory = async () => {
             try {
-                const response = await fetch(`https://clarytix-backend.onrender.com/student/quizzes?studentId=${studentId}`);
+                const response = await fetch(`https://clarytix-backend.onrender.com/student/quiz-history?studentId=${studentId}`);
                 const data = await response.json();
-                if (data.success && Array.isArray(data.availableQuizzes)) {
-                    setAvailableQuizzes(data.availableQuizzes);
+                if (data.success && Array.isArray(data.quizHistory)) {
+                    setQuizHistory(data.quizHistory);
                 } else {
-                    setAvailableQuizzes([]);
-                    console.warn('Unexpected quiz data:', data);
+                    setQuizHistory([]);
+                    console.warn('Unexpected quiz history data:', data);
                 }
             } catch (error) {
-                console.error('Error fetching quizzes', error);
-                setAvailableQuizzes([]);
+                console.error('Error fetching quiz history:', error);
+                setQuizHistory([]);
                 alert('Error connecting to server');
             }
         };
 
-        fetchQuizzes();
+        fetchQuizHistory();
     }, [studentId]);
 
     return (
@@ -43,8 +43,8 @@ function StudentDashboard() {
                 <h1 className="welcome">Hi, {studentName}</h1>
 
                 <section>
-                    <h2 className="section-title" style={{ textAlign: 'left' }}>Available Quizzes</h2>
-                    
+                    <h2 className="section-title" style={{ textAlign: 'left' }}>Quiz History</h2>
+
                     <div className="table-wrapper">
                         <table className="quiz-table">
                             <thead>
@@ -55,8 +55,8 @@ function StudentDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {Array.isArray(availableQuizzes) && availableQuizzes.length > 0 ? (
-                                    availableQuizzes.map((quiz) => (
+                                {Array.isArray(quizHistory) && quizHistory.length > 0 ? (
+                                    quizHistory.map((quiz) => (
                                         <tr key={quiz.topic_id}>
                                             <td>{quiz.subject}</td>
                                             <td>{quiz.topic}</td>
@@ -65,14 +65,14 @@ function StudentDashboard() {
                                                     className="start-btn"
                                                     onClick={() => navigate(`/quiz/${quiz.topic_id}`)}
                                                 >
-                                                    Start Quiz
+                                                    Retake Quiz
                                                 </button>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="3">No available quizzes</td>
+                                        <td colSpan="3">No previous quizzes</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -80,21 +80,12 @@ function StudentDashboard() {
                     </div>
                 </section>
 
-               <div className="action-row centered-buttons">
-  <div>
-    <button
-      className="start-btn"
-      style={{ marginRight: '12px' }}
-      onClick={() => navigate('/old-quizzes')}
-    >
-      Access Previous Quizzes
-    </button>
-    <LogoutButton />
-  </div>
-</div>
+                <div className="action-row">
+                    <LogoutButton />
+                </div>
             </div>
         </div>
     );
 }
 
-export default StudentDashboard;
+export default OldQuizDashboard;

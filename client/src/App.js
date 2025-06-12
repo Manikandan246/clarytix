@@ -4,14 +4,15 @@ import LoginPage from './components/LoginPage';
 import StudentDashboard from './components/StudentDashboard';
 import TeacherDashboard from './components/TeacherDashboard';
 import AdminDashboard from './components/AdminDashboard';
-import QuizContainer from './components/QuizContainer'; 
-import AdminPerformancePage from './components/AdminPerformancePage';// <- update here
+import QuizContainer from './components/QuizContainer';
+import AdminPerformancePage from './components/AdminPerformancePage';
+import OldQuizDashboard from './components/OldQuizDashboard'; // ✅ Import this
 
-// Wrapper to extract topicId from URL params
 function WrappedQuizContainer() {
   const { topicId } = useParams();
   return <QuizContainer topicId={topicId} />;
 }
+
 function App() {
   return (
     <Router>
@@ -22,6 +23,7 @@ function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/quiz/:topicId" element={<WrappedQuizContainer />} />
         <Route path="/admin/performance/:topicId" element={<AdminPerformancePage />} />
+        <Route path="/old-quizzes" element={<OldQuizDashboard />} /> {/* ✅ Add this */}
       </Routes>
     </Router>
   );
