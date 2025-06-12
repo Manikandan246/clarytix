@@ -80,7 +80,14 @@ function StudentDashboard() {
                     </div>
                 </section>
 
-                <div className="logout-container">
+                <div className="action-row">
+                    <button
+                        className="start-btn"
+                        style={{ marginRight: '12px' }}
+                        onClick={() => navigate('/old-quizzes')}
+                    >
+                        Access Previous Quizzes
+                    </button>
                     <LogoutButton />
                 </div>
             </div>
