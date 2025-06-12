@@ -9,7 +9,7 @@ const app = express();
 
 // Enable CORS (must be at the top!)
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://clarytix.netlify.app','https://clarytix.org', 'https://www.clarytix.org']
+    origin: ['http://localhost:3000', 'https://clarytix.netlify.app','https://clarytix.org', 'https://www.clarytix.org','https://clary.netlify.app']
 }));
 
 
