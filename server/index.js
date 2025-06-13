@@ -527,22 +527,39 @@ app.get('/admin/student-performance', async (req, res) => {
         const client = await pool.connect();
 
         const result = await client.query(`
-            SELECT t.name AS topic, qa.score,
-                (SELECT ROUND(AVG(score)::numeric, 1)
-                 FROM quiz_attempts qa2
-                 JOIN topics t2 ON qa2.topic_id = t2.id
-                 WHERE qa2.attempt_number = 1
-                   AND t2.subject_id = $2
-                   AND qa2.topic_id = qa.topic_id) AS class_avg,
-                (SELECT MAX(score)
-                 FROM quiz_attempts qa3
-                 WHERE qa3.attempt_number = 1
-                   AND qa3.topic_id = qa.topic_id) AS highest_score
-            FROM quiz_attempts qa
-            JOIN topics t ON qa.topic_id = t.id
-            WHERE qa.user_id = $1
-              AND t.subject_id = $2
-              AND qa.attempt_number = 1
+        SELECT 
+    t.name AS topic, 
+    qa.score,
+    ROUND((
+        SELECT AVG(qa2.score)::numeric(10,1)
+        FROM quiz_attempts qa2
+        JOIN users u2 ON qa2.user_id = u2.id
+        WHERE qa2.attempt_number = 1
+          AND qa2.topic_id = qa.topic_id
+          AND u2.school_id = u.school_id
+          AND qa2.user_id IN (
+              SELECT s.user_id FROM students s WHERE s.class = stu.class
+          )
+    ), 1) AS class_avg,
+    (
+        SELECT MAX(qa3.score)
+        FROM quiz_attempts qa3
+        JOIN users u3 ON qa3.user_id = u3.id
+        WHERE qa3.attempt_number = 1
+          AND qa3.topic_id = qa.topic_id
+          AND u3.school_id = u.school_id
+          AND qa3.user_id IN (
+              SELECT s.user_id FROM students s WHERE s.class = stu.class
+          )
+    ) AS highest_score
+FROM quiz_attempts qa
+JOIN topics t ON qa.topic_id = t.id
+JOIN users u ON qa.user_id = u.id
+JOIN students stu ON u.id = stu.user_id
+WHERE qa.user_id = $1
+  AND t.subject_id = $2
+  AND qa.attempt_number = 1;
+
         `, [studentId, subjectId]);
 
         client.release();
@@ -569,6 +586,34 @@ app.get('/admin/student-name', async (req, res) => {
         }
     } catch (err) {
         console.error('Fetch student name error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.get('/admin/student-subject-name', async (req, res) => {
+    const { studentId, subjectId } = req.query;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query(
+            `SELECT 
+                (SELECT username FROM users WHERE id = $1) AS student_name,
+                (SELECT name FROM subjects WHERE id = $2) AS subject_name`,
+            [studentId, subjectId]
+        );
+        client.release();
+
+        if (result.rows.length === 1) {
+            res.json({
+                success: true,
+                studentName: result.rows[0].student_name,
+                subjectName: result.rows[0].subject_name
+            });
+        } else {
+            res.json({ success: false, message: 'Student or subject not found' });
+        }
+    } catch (err) {
+        console.error('Error fetching student and subject name:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });

@@ -7,6 +7,7 @@ function StudentPerformance() {
     const navigate = useNavigate();
     const [records, setRecords] = useState([]);
     const [studentName, setStudentName] = useState('');
+    const [subjectName, setSubjectName] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -35,23 +36,24 @@ function StudentPerformance() {
             }
         };
 
-        const fetchStudentName = async () => {
+        const fetchStudentAndSubjectName = async () => {
             try {
                 const response = await fetch(
-                    `https://clarytix-backend.onrender.com/admin/student-name?studentId=${studentId}`
+                    `https://clarytix-backend.onrender.com/admin/student-subject-name?studentId=${studentId}&subjectId=${subjectId}`
                 );
                 const data = await response.json();
                 if (data.success) {
-                    setStudentName(data.name);
+                    setStudentName(data.studentName);
+                    setSubjectName(data.subjectName);
                 }
             } catch (err) {
-                console.error('Error fetching student name', err);
+                console.error('Error fetching student/subject name', err);
             }
         };
 
         if (studentId && subjectId) {
             fetchPerformance();
-            fetchStudentName();
+            fetchStudentAndSubjectName();
         } else {
             setError('Missing student or subject ID');
             setLoading(false);
@@ -66,7 +68,11 @@ function StudentPerformance() {
         <div className="performance-wrapper">
             <div className="performance-container">
                 <img src={schoolLogo} alt="School Logo" className="school-logo-full" />
-                <h2 className="performance-title">{studentName ? `${studentName}'s Performance` : 'Student Performance'}</h2>
+                <h2 className="performance-title">
+                    {studentName && subjectName
+                        ? `${studentName}'s Performance in ${subjectName}`
+                        : 'Student Performance'}
+                </h2>
 
                 {loading ? (
                     <p>Loading...</p>
@@ -97,9 +103,11 @@ function StudentPerformance() {
                     </table>
                 )}
 
-                <button className="home-btn" onClick={handleGoHome}>
-                    Go to Homepage
-                </button>
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                    <button className="home-btn" onClick={handleGoHome}>
+                        Go to Homepage
+                    </button>
+                </div>
             </div>
         </div>
     );
