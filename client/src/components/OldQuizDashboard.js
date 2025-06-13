@@ -12,14 +12,17 @@ function OldQuizDashboard() {
 
     useEffect(() => {
         const fetchQuizHistory = async () => {
+            console.log('Student ID from localStorage:', studentId);  // ✅ Debug studentId
             try {
                 const response = await fetch(`https://clarytix-backend.onrender.com/student/old-quizzes?studentId=${studentId}`);
                 const data = await response.json();
+                console.log('Response from backend /student/old-quizzes:', data); // ✅ Debug response
+
                 if (data.success && Array.isArray(data.oldQuizzes)) {
                     setQuizHistory(data.oldQuizzes);
                 } else {
                     setQuizHistory([]);
-                    console.warn('Unexpected quiz history data:', data);
+                    console.warn('Unexpected quiz history data format:', data);
                 }
             } catch (error) {
                 console.error('Error fetching quiz history:', error);

@@ -400,6 +400,7 @@ app.get('/admin/performance-metrics', async (req, res) => {
 
 app.get('/student/old-quizzes', async (req, res) => {
     const { studentId } = req.query;
+    console.log('Received request to /student/old-quizzes with studentId:', studentId); // ✅
 
     try {
         const client = await pool.connect();
@@ -413,6 +414,8 @@ app.get('/student/old-quizzes', async (req, res) => {
              ORDER BY qa.attempt_id DESC`,
             [studentId]
         );
+
+        console.log('Query result from /student/old-quizzes:', result.rows); // ✅
 
         client.release();
         res.json({ success: true, oldQuizzes: result.rows });
