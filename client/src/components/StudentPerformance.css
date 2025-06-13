@@ -1,0 +1,30 @@
+.performance-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+.performance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.performance-table th,
+.performance-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.performance-table th {
+    background-color: #f0f0f0;
+    font-weight: 600;
+}
+
+.performance-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
