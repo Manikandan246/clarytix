@@ -553,6 +553,26 @@ app.get('/admin/student-performance', async (req, res) => {
     }
 });
 
+app.get('/admin/student-name', async (req, res) => {
+    const { studentId } = req.query;
+    try {
+        const client = await pool.connect();
+        const result = await client.query(
+            'SELECT username FROM users WHERE id = $1',
+            [studentId]
+        );
+        client.release();
+        if (result.rows.length === 1) {
+            res.json({ success: true, name: result.rows[0].username });
+        } else {
+            res.json({ success: false, message: 'Student not found' });
+        }
+    } catch (err) {
+        console.error('Fetch student name error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 
 
 
