@@ -1,42 +1,78 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import './StudentPerformance.css';
 
 function StudentPerformance() {
-    const { studentId, subjectId } = useParams();
-    const [data, setData] = useState([]);
+    const location = useLocation();
+    const [records, setRecords] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const queryParams = new URLSearchParams(location.search);
+    const studentId = queryParams.get('studentId');
+    const subjectId = queryParams.get('subjectId');
 
     useEffect(() => {
-        fetch(`https://clarytix-backend.onrender.com/admin/student-performance?studentId=${studentId}&subjectId=${subjectId}`)
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) setData(res.performance);
-            });
+        const fetchData = async () => {
+            try {
+                const response = await fetch(
+                    `https://clarytix-backend.onrender.com/admin/student-performance?studentId=${studentId}&subjectId=${subjectId}`
+                );
+                const data = await response.json();
+                if (data.success) {
+                    setRecords(data.records);
+                } else {
+                    setError('No data found');
+                }
+            } catch (err) {
+                console.error('Error fetching performance', err);
+                setError('Server error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (studentId && subjectId) {
+            fetchData();
+        } else {
+            setError('Missing student or subject ID');
+            setLoading(false);
+        }
     }, [studentId, subjectId]);
 
     return (
-        <div className="performance-container">
-            <h2>Student Performance</h2>
-            <table className="performance-table">
-                <thead>
-                    <tr>
-                        <th>Topic</th>
-                        <th>Score</th>
-                        <th>Class Avg</th>
-                        <th>Highest Score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((row, index) => (
-                        <tr key={index}>
-                            <td>{row.topic}</td>
-                            <td>{row.score}</td>
-                            <td>{row.class_avg}</td>
-                            <td>{row.highest_score}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="performance-wrapper">
+            <div className="performance-container">
+                <h2 className="performance-title">Student Performance</h2>
+                {loading ? (
+                    <p>Loading...</p>
+                ) : error ? (
+                    <p className="error-msg">{error}</p>
+                ) : records.length === 0 ? (
+                    <p>No records available.</p>
+                ) : (
+                    <table className="performance-table">
+                        <thead>
+                            <tr>
+                                <th>Topic</th>
+                                <th>Score</th>
+                                <th>Class Avg</th>
+                                <th>Highest Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {records.map((row, index) => (
+                                <tr key={index}>
+                                    <td>{row.topic}</td>
+                                    <td>{row.score}</td>
+                                    <td>{row.class_avg}</td>
+                                    <td>{row.highest_score}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
         </div>
     );
 }

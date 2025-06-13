@@ -527,43 +527,32 @@ app.get('/admin/student-performance', async (req, res) => {
         const client = await pool.connect();
 
         const result = await client.query(`
-            SELECT t.name AS topic, q.class, qa.score,
-                   (
-                     SELECT ROUND(AVG(sub_qa.score), 1)
-                     FROM quiz_attempts sub_qa
-                     JOIN users u ON u.id = sub_qa.user_id
-                     WHERE sub_qa.topic_id = qa.topic_id
-                     AND sub_qa.attempt_number = 1
-                     AND u.school_id = (
-                         SELECT school_id FROM users WHERE id = $1
-                     )
-                   ) AS class_avg,
-                   (
-                     SELECT MAX(sub_qa.score)
-                     FROM quiz_attempts sub_qa
-                     JOIN users u ON u.id = sub_qa.user_id
-                     WHERE sub_qa.topic_id = qa.topic_id
-                     AND sub_qa.attempt_number = 1
-                     AND u.school_id = (
-                         SELECT school_id FROM users WHERE id = $1
-                     )
-                   ) AS highest_score
+            SELECT t.name AS topic, qa.score,
+                (SELECT ROUND(AVG(score)::numeric, 1)
+                 FROM quiz_attempts qa2
+                 JOIN topics t2 ON qa2.topic_id = t2.id
+                 WHERE qa2.attempt_number = 1
+                   AND t2.subject_id = $2
+                   AND qa2.topic_id = qa.topic_id) AS class_avg,
+                (SELECT MAX(score)
+                 FROM quiz_attempts qa3
+                 WHERE qa3.attempt_number = 1
+                   AND qa3.topic_id = qa.topic_id) AS highest_score
             FROM quiz_attempts qa
             JOIN topics t ON qa.topic_id = t.id
-            JOIN questions q ON q.topic_id = t.id
             WHERE qa.user_id = $1
-              AND qa.attempt_number = 1
               AND t.subject_id = $2
-            GROUP BY t.name, q.class, qa.score, qa.topic_id
+              AND qa.attempt_number = 1
         `, [studentId, subjectId]);
 
         client.release();
-        res.json({ success: true, performance: result.rows });
+        res.json({ success: true, records: result.rows });
     } catch (err) {
         console.error('Fetch student performance error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 
 
