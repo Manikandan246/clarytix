@@ -471,17 +471,20 @@ app.get('/admin/topics', async (req, res) => {
 
 app.get('/admin/students', async (req, res) => {
     const { schoolId, class: className } = req.query;
+
     try {
         const client = await pool.connect();
         const result = await client.query(
             `SELECT u.id, u.username 
              FROM users u
              JOIN students s ON u.id = s.user_id
-             WHERE u.school_id = $1 AND s.class = $2`,
+             WHERE u.school_id = $1 AND s.class = $2 AND u.role = 'student'
+             ORDER BY u.username`,
             [schoolId, className]
         );
         client.release();
         res.json({ success: true, students: result.rows });
+
     } catch (err) {
         console.error('Fetch students error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
