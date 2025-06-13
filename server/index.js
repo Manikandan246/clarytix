@@ -470,7 +470,7 @@ app.get('/admin/topics', async (req, res) => {
 });
 
 app.get('/admin/students', async (req, res) => {
-    const { schoolId, class: className } = req.query;
+    const { schoolId, className } = req.query;
 
     try {
         const client = await pool.connect();

@@ -150,7 +150,7 @@ function AdminDashboard() {
                         >
                             <option value="">Student</option>
                             {students.map((student) => (
-                                <option key={student.user_id} value={student.user_id}>{student.username}</option>
+                                <option key={student.id} value={student.id}>{student.username}</option>
                             ))}
                         </select>
 
