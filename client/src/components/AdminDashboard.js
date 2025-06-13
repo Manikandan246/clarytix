@@ -8,100 +8,109 @@ function AdminDashboard() {
     const [subjects, setSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState('');
     const [topics, setTopics] = useState([]);
-    const [selectedTopic, setSelectedTopic] = useState('');
-    
+    const [selectedTopicId, setSelectedTopicId] = useState('');
 
-    const navigate = useNavigate();
-    const schoolLogo = localStorage.getItem('schoolLogoUrl');
     const schoolId = localStorage.getItem('schoolId');
+    const schoolLogo = localStorage.getItem('schoolLogoUrl');
+    const navigate = useNavigate();
 
-    const classOptions = [
-        'Class 5', 'Class 6', 'Class 7', 'Class 8',
-        'Class 9', 'Class 10', 'Class 11', 'Class 12'
-    ];
-
+    // Fetch subjects when class changes
     useEffect(() => {
         if (selectedClass) {
-            fetch(`https://clarytix-backend.onrender.com/admin/subjects?schoolId=${schoolId}&className=${selectedClass}`)
+            fetch(`https://clarytix-backend.onrender.com/school-subjects?schoolId=${schoolId}&class=${selectedClass}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success) {
-                        setSubjects(data.subjects);
-                        setSelectedSubject('');
-                        setTopics([]);
-                        setSelectedTopic('');
-                    }
-                })
-                .catch(error => {
-                    console.error("Error fetching subjects", error);
+                    if (data.success) setSubjects(data.subjects);
+                    else setSubjects([]);
+                    setSelectedSubject('');
+                    setTopics([]);
+                    setSelectedTopicId('');
                 });
         }
     }, [selectedClass, schoolId]);
 
+    // Fetch topics when subject changes
     useEffect(() => {
         if (selectedClass && selectedSubject) {
-            fetch(`https://clarytix-backend.onrender.com/admin/topics?className=${selectedClass}&subjectId=${selectedSubject}`)
+            fetch(`https://clarytix-backend.onrender.com/school-topics?schoolId=${schoolId}&class=${selectedClass}&subject=${selectedSubject}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success) {
-                        setTopics(data.topics);
-                        setSelectedTopic('');
-                    }
-                })
-                .catch(error => {
-                    console.error("Error fetching topics", error);
+                    if (data.success) setTopics(data.topics);
+                    else setTopics([]);
+                    setSelectedTopicId('');
                 });
         }
-    }, [selectedClass, selectedSubject]);
+    }, [selectedClass, selectedSubject, schoolId]);
 
-    const handleTrack = () => {
-        if (selectedTopic) {
-            navigate(`/admin/performance/${selectedTopic}`);
+    const handleTrackPerformance = () => {
+        if (selectedTopicId) {
+            navigate(`/admin/performance/${selectedTopicId}`);
         }
     };
 
     return (
-        <div className="admin-dashboard-container">
-            <img src={schoolLogo} alt="School Logo" className="school-logo-full" />
-            <h2 className="admin-welcome">Welcome Admin</h2>
+        <div className="admin-dashboard-wrapper">
+            <div className="admin-dashboard-container">
+                <img src={schoolLogo} alt="School Logo" className="school-logo-full" />
+                <h2 className="admin-welcome">Welcome Admin</h2>
 
-            <div className="track-section">
-                <h3>Track Performance Topic Wise</h3>
+                <div className="card">
+                    <h3 className="card-title">Track Performance Topic Wise</h3>
+                    <div className="dropdown-row">
+                        <select
+                            className="dropdown"
+                            value={selectedClass}
+                            onChange={(e) => setSelectedClass(e.target.value)}
+                        >
+                            <option value="">Class</option>
+                            {Array.from({ length: 8 }, (_, i) => (
+                                <option key={i + 5} value={`Class ${i + 5}`}>
+                                    Class {i + 5}
+                                </option>
+                            ))}
+                        </select>
 
-                <div className="dropdown-row">
-                    <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)}>
-                        <option value="">Select Class</option>
-                        {classOptions.map(cls => (
-                            <option key={cls} value={cls}>{cls}</option>
-                        ))}
-                    </select>
+                        <select
+                            className="dropdown"
+                            value={selectedSubject}
+                            onChange={(e) => setSelectedSubject(e.target.value)}
+                            disabled={!selectedClass}
+                        >
+                            <option value="">Subject</option>
+                            {subjects.map((subject, index) => (
+                                <option key={index} value={subject}>
+                                    {subject}
+                                </option>
+                            ))}
+                        </select>
 
-                    <select value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} disabled={!selectedClass}>
-                        <option value="">Select Subject</option>
-                        {subjects.map(sub => (
-                            <option key={sub.id} value={sub.id}>{sub.name}</option>
-                        ))}
-                    </select>
+                        <select
+                            className="dropdown"
+                            value={selectedTopicId}
+                            onChange={(e) => setSelectedTopicId(e.target.value)}
+                            disabled={!selectedSubject}
+                        >
+                            <option value="">Select Topic</option>
+                            {topics.map((topic) => (
+                                <option key={topic.id} value={topic.id}>
+                                    {topic.name}
+                                </option>
+                            ))}
+                        </select>
 
-                    <select value={selectedTopic} onChange={e => setSelectedTopic(e.target.value)} disabled={!selectedSubject}>
-                        <option value="">Select Topic</option>
-                        {topics.map(top => (
-                            <option key={top.id} value={top.id}>{top.name}</option>
-                        ))}
-                    </select>
+                        <button
+                            className="track-btn"
+                            disabled={!selectedTopicId}
+                            onClick={handleTrackPerformance}
+                        >
+                            Track Performance
+                        </button>
+                    </div>
                 </div>
 
-                <button
-                    className="track-btn"
-                    onClick={handleTrack}
-                    disabled={!selectedClass || !selectedSubject || !selectedTopic}
-                >
-                    Track Performance
-                </button>
-            </div>
-
-            <div className="logout-container">
-                <LogoutButton />
+                <div className="logout-container">
+                    <LogoutButton />
+                </div>
             </div>
         </div>
     );

@@ -431,13 +431,8 @@ app.get('/student/old-quizzes', async (req, res) => {
 app.get('/admin/subjects', async (req, res) => {
     const { schoolId, className } = req.query;
 
-    if (!schoolId || !className) {
-        return res.status(400).json({ success: false, message: 'Missing schoolId or className' });
-    }
-
     try {
         const client = await pool.connect();
-
         const result = await client.query(
             `SELECT DISTINCT s.id, s.name
              FROM school_curriculum sc
@@ -445,41 +440,35 @@ app.get('/admin/subjects', async (req, res) => {
              WHERE sc.school_id = $1 AND sc.class = $2`,
             [schoolId, className]
         );
-
         client.release();
-
         res.json({ success: true, subjects: result.rows });
     } catch (err) {
-        console.error('Error fetching subjects:', err);
+        console.error('Fetch subjects error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
-app.get('/admin/topics', async (req, res) => {
-    const { className, subjectId } = req.query;
 
-    if (!className || !subjectId) {
-        return res.status(400).json({ success: false, message: 'Missing className or subjectId' });
-    }
+app.get('/admin/topics', async (req, res) => {
+    const { schoolId, className, subjectId } = req.query;
 
     try {
         const client = await pool.connect();
-
         const result = await client.query(
-            `SELECT id, name
-             FROM topics
-             WHERE class = $1 AND subject_id = $2`,
-            [className, subjectId]
+            `SELECT DISTINCT t.id, t.name
+             FROM topics t
+             JOIN school_curriculum sc ON t.subject_id = sc.subject_id AND t.class = sc.class
+             WHERE sc.school_id = $1 AND sc.class = $2 AND sc.subject_id = $3`,
+            [schoolId, className, subjectId]
         );
-
         client.release();
-
         res.json({ success: true, topics: result.rows });
     } catch (err) {
-        console.error('Error fetching topics:', err);
+        console.error('Fetch topics error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 
 
