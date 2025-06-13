@@ -1,68 +1,68 @@
 .admin-dashboard-wrapper {
+    padding: 20px;
     display: flex;
     justify-content: center;
-    padding: 30px 20px;
-    background-color: #f4f6f8;
-    min-height: 100vh;
 }
 
 .admin-dashboard-container {
-    background: #fff;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     width: 100%;
-    max-width: 800px;
-    text-align: center;
+    max-width: 900px;
+    background-color: #fdfdfd;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
 }
 
 .school-logo-full {
-    max-width: 300px;
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-.admin-welcome {
-    font-size: 24px;
-    margin-bottom: 20px;
-    font-weight: 600;
+    display: block;
+    max-width: 150px;
+    margin: 0 auto 20px auto;
 }
 
 .card {
-    background: #fafafa;
+    background-color: #ffffff;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 20px;
-    margin-top: 20px;
-    text-align: left;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-.card h3 {
+.card-title {
     margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: 600;
     color: #333;
 }
 
 .dropdown-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 15px;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.dropdown-row select, .dropdown-row button {
-    padding: 10px 14px;
-    font-size: 15px;
-    border-radius: 6px;
+.dropdown {
+    flex: 1;
+    min-width: 150px;
+    height: 40px;
+    padding: 6px 12px;
+    font-size: 14px;
     border: 1px solid #ccc;
-    min-width: 120px;
-    flex-grow: 1;
+    border-radius: 5px;
 }
 
 .track-btn {
-    background-color: #007bff;
+    flex-shrink: 0;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 14px;
+    background-color: #1e90ff;
     color: white;
     border: none;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
 }
 
 .track-btn:disabled {
@@ -70,20 +70,20 @@
     cursor: not-allowed;
 }
 
-.track-btn:hover:not(:disabled) {
-    background-color: #0056b3;
-}
-
 .logout-container {
     margin-top: 30px;
+    text-align: center;
 }
 
-@media (max-width: 600px) {
+/* Responsive tweaks */
+@media (max-width: 768px) {
     .dropdown-row {
         flex-direction: column;
+        align-items: stretch;
     }
 
-    .dropdown-row select, .dropdown-row button {
+    .dropdown,
+    .track-btn {
         width: 100%;
     }
 }

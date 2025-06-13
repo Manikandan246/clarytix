@@ -469,6 +469,100 @@ app.get('/admin/topics', async (req, res) => {
     }
 });
 
+app.get('/admin/students', async (req, res) => {
+    const { schoolId, class: className } = req.query;
+    try {
+        const client = await pool.connect();
+        const result = await client.query(
+            `SELECT u.id, u.username 
+             FROM users u
+             JOIN students s ON u.id = s.user_id
+             WHERE u.school_id = $1 AND s.class = $2`,
+            [schoolId, className]
+        );
+        client.release();
+        res.json({ success: true, students: result.rows });
+    } catch (err) {
+        console.error('Fetch students error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
+app.get('/admin/student-subjects', async (req, res) => {
+    const { studentId } = req.query;
+    try {
+        const client = await pool.connect();
+        const classResult = await client.query('SELECT class, user_id FROM students WHERE user_id = $1', [studentId]);
+        if (classResult.rows.length === 0) {
+            client.release();
+            return res.json({ success: true, subjects: [] });
+        }
+        const { class: className } = classResult.rows[0];
+        const schoolResult = await client.query('SELECT school_id FROM users WHERE id = $1', [studentId]);
+        const schoolId = schoolResult.rows[0].school_id;
+
+        const subjectResult = await client.query(
+            `SELECT s.id, s.name FROM school_curriculum sc
+             JOIN subjects s ON s.id = sc.subject_id
+             WHERE sc.class = $1 AND sc.school_id = $2`,
+            [className, schoolId]
+        );
+
+        client.release();
+        res.json({ success: true, subjects: subjectResult.rows });
+    } catch (err) {
+        console.error('Fetch student subjects error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.get('/admin/student-performance', async (req, res) => {
+    const { studentId, subjectId } = req.query;
+
+    try {
+        const client = await pool.connect();
+
+        const result = await client.query(`
+            SELECT t.name AS topic, q.class, qa.score,
+                   (
+                     SELECT ROUND(AVG(sub_qa.score), 1)
+                     FROM quiz_attempts sub_qa
+                     JOIN users u ON u.id = sub_qa.user_id
+                     WHERE sub_qa.topic_id = qa.topic_id
+                     AND sub_qa.attempt_number = 1
+                     AND u.school_id = (
+                         SELECT school_id FROM users WHERE id = $1
+                     )
+                   ) AS class_avg,
+                   (
+                     SELECT MAX(sub_qa.score)
+                     FROM quiz_attempts sub_qa
+                     JOIN users u ON u.id = sub_qa.user_id
+                     WHERE sub_qa.topic_id = qa.topic_id
+                     AND sub_qa.attempt_number = 1
+                     AND u.school_id = (
+                         SELECT school_id FROM users WHERE id = $1
+                     )
+                   ) AS highest_score
+            FROM quiz_attempts qa
+            JOIN topics t ON qa.topic_id = t.id
+            JOIN questions q ON q.topic_id = t.id
+            WHERE qa.user_id = $1
+              AND qa.attempt_number = 1
+              AND t.subject_id = $2
+            GROUP BY t.name, q.class, qa.score, qa.topic_id
+        `, [studentId, subjectId]);
+
+        client.release();
+        res.json({ success: true, performance: result.rows });
+    } catch (err) {
+        console.error('Fetch student performance error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
 
 
 
