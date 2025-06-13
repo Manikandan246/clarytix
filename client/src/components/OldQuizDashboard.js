@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './OldQuizDashboard.css';
-import LogoutButton from './LogoutButton';
+
 
 function OldQuizDashboard() {
     const studentName = localStorage.getItem('username') || 'Student';
@@ -83,9 +83,11 @@ function OldQuizDashboard() {
                     </div>
                 </section>
 
-                <div className="action-row">
-                    <LogoutButton />
-                </div>
+              <div className="action-row" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+    <button className="start-btn" onClick={() => navigate('/student-dashboard')}>
+        Go to Homepage
+    </button>
+</div>
             </div>
         </div>
     );

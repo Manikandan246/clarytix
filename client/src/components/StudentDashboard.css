@@ -15,101 +15,105 @@ body {
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-    max-width: 700px;
     width: 100%;
+    max-width: 700px;
     text-align: center;
 }
 
 .dashboard-logo {
+    max-width: 250px;
     width: 100%;
-    max-width: 250px;  /* Make logo more prominent */
     height: auto;
     margin-bottom: 20px;
     object-fit: contain;
 }
 
 .welcome {
-    font-size: 28px;
-    margin: 10px 0 5px;
+    font-size: 24px;
+    margin-bottom: 10px;
 }
 
 .section-title {
-    font-size: 22px;
-    margin-top: 25px;
-    margin-bottom: 15px;
+    font-size: 20px;
+    margin: 20px 0 12px;
     color: #333;
 }
 
-.quiz-table {
-    width: 100%;
-    border-collapse: collapse;
+.quiz-cards-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.quiz-table th,
-.quiz-table td {
-    background: #ffffff;
-    padding: 12px 16px;
+.quiz-card {
     border: 1px solid #ddd;
-    text-align: center;
-    word-wrap: break-word;
+    padding: 16px;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    text-align: left;
 }
 
-.quiz-table th {
-    background-color: #f0f0f0;
-    font-weight: 600;
+.quiz-card p {
+    margin: 8px 0;
 }
 
 .start-btn {
     background-color: #007bff;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: 6px;
-    font-weight: 500;
+    font-size: 14px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    font-size: 16px;
+    white-space: nowrap;
 }
 
 .start-btn:hover {
     background-color: #0056b3;
 }
 
-.logout-container {
-    margin-top: 20px;
+.centered-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
 }
 
-.logout-container button {
-    padding: 10px 20px;
+.no-quizzes-text {
+    text-align: center;
     font-size: 16px;
+    color: #777;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
     .dashboard-container {
         padding: 20px;
     }
 
     .dashboard-logo {
         max-width: 180px;
-        margin-bottom: 15px;
     }
 
     .welcome {
-        font-size: 24px;
+        font-size: 20px;
     }
 
-    .quiz-table th,
-    .quiz-table td {
-        padding: 8px 10px;
+    .section-title {
+        font-size: 18px;
+    }
+
+    .quiz-card {
+        padding: 12px;
+    }
+
+    .quiz-card p {
         font-size: 14px;
     }
 
     .start-btn {
-        padding: 6px 12px;
-        font-size: 14px;
-    }
-
-    .logout-container button {
-        font-size: 14px;
+        font-size: 13px;
+        padding: 6px 10px;
     }
 }

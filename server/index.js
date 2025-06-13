@@ -238,32 +238,40 @@ app.get('/student/quizzes', async (req, res) => {
     try {
         const client = await pool.connect();
 
-        // First, fetch the student's class
+        // Get student's class
         const studentResult = await client.query(
             'SELECT class FROM students WHERE user_id = $1',
             [studentId]
         );
 
         if (studentResult.rows.length === 0) {
-            console.log(`No student found for user_id: ${studentId}`);
             client.release();
             return res.json({ success: true, availableQuizzes: [] });
         }
 
         const studentClass = studentResult.rows[0].class;
-        console.log(`Student ${studentId} is in class: ${studentClass}`);
 
-        // Then, fetch the quizzes matching that class
-        const quizResult = await client.query(
-            `SELECT DISTINCT q.topic_id, s.name AS subject, t.name AS topic
-             FROM questions q
-             JOIN topics t ON q.topic_id = t.id
-             JOIN subjects s ON t.subject_id = s.id
-             WHERE q.class = $1`,
-            [studentClass]
+        // Get topics already attempted by the student
+        const attemptedResult = await client.query(
+            `SELECT DISTINCT topic_id
+             FROM quiz_attempts
+             WHERE user_id = $1`,
+            [studentId]
         );
+        const attemptedTopicIds = attemptedResult.rows.map(row => row.topic_id);
 
-        
+        // Get all quizzes for the student's class that were NOT attempted
+        const quizQuery = `
+            SELECT DISTINCT q.topic_id, s.name AS subject, t.name AS topic
+            FROM questions q
+            JOIN topics t ON q.topic_id = t.id
+            JOIN subjects s ON t.subject_id = s.id
+            WHERE q.class = $1
+            ${attemptedTopicIds.length > 0 ? `AND q.topic_id NOT IN (${attemptedTopicIds.map((_, i) => `$${i + 2}`).join(',')})` : ''}
+        `;
+
+        const params = [studentClass, ...attemptedTopicIds];
+        const quizResult = await client.query(quizQuery, params);
 
         client.release();
 
@@ -273,6 +281,7 @@ app.get('/student/quizzes', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 app.get('/admin/quizzes', async (req, res) => {
     const { schoolId } = req.query;

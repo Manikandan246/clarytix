@@ -43,55 +43,39 @@ function StudentDashboard() {
                 <h1 className="welcome">Hi, {studentName}</h1>
 
                 <section>
-                    <h2 className="section-title" style={{ textAlign: 'left' }}>Available Quizzes</h2>
-                    
-                    <div className="table-wrapper">
-                        <table className="quiz-table">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Topic</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {Array.isArray(availableQuizzes) && availableQuizzes.length > 0 ? (
-                                    availableQuizzes.map((quiz) => (
-                                        <tr key={quiz.topic_id}>
-                                            <td>{quiz.subject}</td>
-                                            <td>{quiz.topic}</td>
-                                            <td>
-                                                <button
-                                                    className="start-btn"
-                                                    onClick={() => navigate(`/quiz/${quiz.topic_id}`)}
-                                                >
-                                                    Start Quiz
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="3">No available quizzes</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                  <h2 className="section-title" style={{ textAlign: 'left' }}>
+  Available Quizzes ({availableQuizzes.length})
+</h2>
+
+                    <div className="quiz-cards-wrapper">
+                        {Array.isArray(availableQuizzes) && availableQuizzes.length > 0 ? (
+                            availableQuizzes.map((quiz) => (
+                                <div key={quiz.topic_id} className="quiz-card">
+                                    <p><strong>Subject:</strong> {quiz.subject}</p>
+                                    <p><strong>Topic:</strong> {quiz.topic}</p>
+                                    <button
+                                        className="start-btn"
+                                        onClick={() => navigate(`/quiz/${quiz.topic_id}`)}
+                                    >
+                                        Start Quiz
+                                    </button>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="no-quizzes-text">No available quizzes</p>
+                        )}
                     </div>
                 </section>
 
-               <div className="action-row centered-buttons">
-  <div>
-    <button
-      className="start-btn"
-      style={{ marginRight: '12px' }}
-      onClick={() => navigate('/old-quizzes')}
-    >
-      Access Previous Quizzes
-    </button>
-    <LogoutButton />
-  </div>
-</div>
+                <div className="centered-buttons">
+                    <button
+                        className="start-btn"
+                        onClick={() => navigate('/old-quizzes')}
+                    >
+                        Access Previous Quizzes
+                    </button>
+                    <LogoutButton />
+                </div>
             </div>
         </div>
     );
