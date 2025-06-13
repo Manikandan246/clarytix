@@ -13,7 +13,7 @@ function OldQuizDashboard() {
     useEffect(() => {
         const fetchQuizHistory = async () => {
             try {
-                const response = await fetch(`https://clarytix-backend.onrender.com/student/quiz-history?studentId=${studentId}`);
+                const response = await fetch(`https://clarytix-backend.onrender.com/student/old-quizzes?studentId=${studentId}`);
                 const data = await response.json();
                 if (data.success && Array.isArray(data.quizHistory)) {
                     setQuizHistory(data.quizHistory);

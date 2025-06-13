@@ -405,24 +405,24 @@ app.get('/student/old-quizzes', async (req, res) => {
         const client = await pool.connect();
 
         const result = await client.query(
-            `SELECT DISTINCT q.class, s.name AS subject, t.name AS topic, t.id AS topic_id
+            `SELECT DISTINCT s.name AS subject, t.name AS topic, t.id AS topic_id
              FROM quiz_attempts qa
              JOIN topics t ON qa.topic_id = t.id
              JOIN subjects s ON t.subject_id = s.id
-             JOIN questions q ON q.topic_id = t.id
              WHERE qa.user_id = $1 AND qa.attempt_number = 1
              ORDER BY qa.attempt_id DESC`,
             [studentId]
         );
 
         client.release();
-        res.json({ success: true, oldQuizzes: result.rows });
+        res.json({ success: true, quizHistory: result.rows });
 
     } catch (err) {
         console.error('Fetch old quizzes error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 
 // =====================
