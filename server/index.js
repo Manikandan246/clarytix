@@ -400,22 +400,22 @@ app.get('/admin/performance-metrics', async (req, res) => {
 
 app.get('/student/old-quizzes', async (req, res) => {
     const { studentId } = req.query;
-    console.log('Received request to /student/old-quizzes with studentId:', studentId); // ✅
 
     try {
         const client = await pool.connect();
+        console.log('Received request to /student/old-quizzes with studentId:', studentId);
 
         const result = await client.query(
-            `SELECT DISTINCT s.name AS subject, t.name AS topic, t.id AS topic_id
+            `SELECT DISTINCT ON (t.id) s.name AS subject, t.name AS topic, t.id AS topic_id, qa.attempt_id
              FROM quiz_attempts qa
              JOIN topics t ON qa.topic_id = t.id
              JOIN subjects s ON t.subject_id = s.id
              WHERE qa.user_id = $1 AND qa.attempt_number = 1
-             ORDER BY qa.attempt_id DESC`,
+             ORDER BY t.id, qa.attempt_id DESC`,
             [studentId]
         );
 
-        console.log('Query result from /student/old-quizzes:', result.rows); // ✅
+        console.log('Query result:', result.rows);
 
         client.release();
         res.json({ success: true, oldQuizzes: result.rows });
