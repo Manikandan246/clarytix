@@ -415,7 +415,7 @@ app.get('/student/old-quizzes', async (req, res) => {
         );
 
         client.release();
-        res.json({ success: true, quizHistory: result.rows });
+        res.json({ success: true, oldQuizzes: result.rows });
 
     } catch (err) {
         console.error('Fetch old quizzes error:', err);

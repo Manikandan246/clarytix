@@ -7,7 +7,7 @@ function OldQuizDashboard() {
     const studentName = localStorage.getItem('username') || 'Student';
     const schoolLogo = localStorage.getItem('schoolLogoUrl');
     const studentId = localStorage.getItem('userId');
-    const [quizHistory, setQuizHistory] = useState([]);
+    const [oldQuizzes, setQuizHistory] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -55,8 +55,8 @@ function OldQuizDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {Array.isArray(quizHistory) && quizHistory.length > 0 ? (
-                                    quizHistory.map((quiz) => (
+                                {Array.isArray(oldQuizzes) && oldQuizzes.length > 0 ? (
+                                    oldQuizzes.map((quiz) => (
                                         <tr key={quiz.topic_id}>
                                             <td>{quiz.subject}</td>
                                             <td>{quiz.topic}</td>
