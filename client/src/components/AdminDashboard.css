@@ -1,101 +1,117 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f6fa;
+}
+
 .admin-dashboard-container {
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
+    max-width: 800px;
+    margin: auto;
+    padding: 30px 20px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 }
 
 .school-logo-full {
-    width: 100%;
-    max-height: 120px;
+    width: 200px;
+    display: block;
+    margin: 0 auto 20px;
     object-fit: contain;
-    margin-bottom: 10px;
 }
 
 .admin-welcome {
     font-size: 24px;
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.section-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: #222;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 6px;
+}
+
+.section {
+    margin-bottom: 40px;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
     margin-bottom: 20px;
 }
 
-.table-wrapper {
-    width: 100%;
-    overflow-x: auto;
+.dropdown-field {
+    flex: 1 1 150px;
 }
 
-.performance-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    table-layout: fixed;
-}
-
-.performance-table th,
-.performance-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-    word-wrap: break-word;
-}
-
-.performance-table th {
-    background-color: #f2f2f2;
+.dropdown-field label {
+    display: block;
     font-size: 14px;
+    margin-bottom: 6px;
+    font-weight: 500;
 }
 
-.nowrap {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.dropdown-field select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    background-color: #fff;
 }
 
-.track-btn {
+.track-button {
     background-color: #007bff;
     color: white;
+    padding: 10px 16px;
+    font-size: 15px;
     border: none;
-    padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
-    width: 100%;
-    box-sizing: border-box;
+    margin-top: 24px;
+    transition: background-color 0.3s ease;
 }
 
-.track-btn:hover {
+.track-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.track-button:hover:not(:disabled) {
     background-color: #0056b3;
 }
 
 .logout-container {
-    margin-top: 20px;
+    margin-top: 40px;
+    text-align: center;
 }
 
-.logout-container button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s;
-}
-
-.logout-container button:hover {
-    background-color: #0056b3;
-}
-
-/* Responsive adjustments */
+/* Responsive design */
 @media (max-width: 600px) {
-    .track-btn {
-        font-size: 12px;
-        padding: 6px 8px;
+    .form-row {
+        flex-direction: column;
     }
 
-    .performance-table th,
-    .performance-table td {
-        font-size: 12px;
-        padding: 6px;
+    .dropdown-field {
+        flex: 1 1 100%;
+    }
+
+    .track-button {
+        width: 100%;
+        margin-top: 12px;
+    }
+
+    .admin-welcome {
+        font-size: 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
     }
 }
