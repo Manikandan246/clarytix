@@ -161,7 +161,8 @@ app.post('/quiz/submit', async (req, res) => {
         const client = await pool.connect();
 
         const correctAnswersResult = await client.query(
-            `SELECT id, question_text, correct_answer, explanation
+            `SELECT id, question_text, correct_answer, explanation,
+                    option_a, option_b, option_c, option_d
              FROM questions
              WHERE topic_id = $1`,
             [topicId]
@@ -180,26 +181,33 @@ app.post('/quiz/submit', async (req, res) => {
             correctAnswersMap[q.id] = {
                 correctAnswer: q.correct_answer,
                 explanation: q.explanation,
-                questionText: q.question_text
+                questionText: q.question_text,
+                option_a: q.option_a,
+                option_b: q.option_b,
+                option_c: q.option_c,
+                option_d: q.option_d
             };
         });
 
         let score = 0;
         const detailedResults = answers.map(({ questionId, selectedOption }) => {
-            const correctAnswer = correctAnswersMap[questionId].correctAnswer;
-            const explanation = correctAnswersMap[questionId].explanation;
-            const questionText = correctAnswersMap[questionId].questionText;
+            const correctData = correctAnswersMap[questionId];
+            const correctAnswer = correctData.correctAnswer;
             const isCorrect = selectedOption === correctAnswer;
 
             if (isCorrect) score += 10;
 
             return {
                 questionId,
-                questionText,
+                questionText: correctData.questionText,
                 selectedOption,
                 correct: isCorrect,
                 correctAnswer,
-                explanation
+                explanation: correctData.explanation,
+                option_a: correctData.option_a,
+                option_b: correctData.option_b,
+                option_c: correctData.option_c,
+                option_d: correctData.option_d
             };
         });
 
@@ -231,6 +239,7 @@ app.post('/quiz/submit', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 app.get('/student/quizzes', async (req, res) => {
     const { studentId } = req.query;

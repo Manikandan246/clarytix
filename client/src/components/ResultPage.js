@@ -9,17 +9,21 @@ function ResultPage({ results, onBackToDashboard }) {
             <img src={schoolLogo} alt="School Logo" className="school-logo" />
             <h2>Quiz Results</h2>
 
-            {results.map((result, index) => (
-                <div key={result.questionId} className="question-block">
-                    <h4 className="question-text">{index + 1}. {result.questionText}</h4>
+           {results.map((result, index) => {
+    const cardClass = result.correct ? 'result-card correct' : 'result-card incorrect';
+    const correctAnswerLetter = result.correctAnswer;
+    const correctAnswerText = result[`option_${correctAnswerLetter.toLowerCase()}`];
 
-                    <p>
-                        {result.correct ? '✅ Correct' : '❌ Incorrect'}
-                    </p>
-                    <p><strong>Correct Answer:</strong> {result.correctAnswer}</p>
-                    <p><strong>Explanation:</strong> {result.explanation}</p>
-                </div>
-            ))}
+    return (
+        <div key={index} className={cardClass}>
+            <h4>{index + 1}. {result.questionText}</h4>
+            <p>{result.correct ? '✅ Correct' : '❌ Incorrect'}</p>
+            <p><strong>Correct Answer:</strong> {correctAnswerLetter}: {correctAnswerText}</p>
+            <p className="explanation"><strong>Explanation:</strong> {result.explanation}</p>
+        </div>
+    );
+})}
+
 
             <button className="submit-btn" onClick={onBackToDashboard}>
                 Back to Homepage
