@@ -37,7 +37,7 @@ function StudentDashboard() {
                 <img
                     src={schoolLogo}
                     alt="School Logo"
-                    className="dashboard-logo"
+                     className="school-logo-large"
                     onError={(e) => { e.target.src = '/fallback-logo.png'; }}
                 />
                 <h1 className="welcome">Hi, {studentName}</h1>
@@ -50,7 +50,8 @@ function StudentDashboard() {
                     <div className="quiz-cards-wrapper">
                         {Array.isArray(availableQuizzes) && availableQuizzes.length > 0 ? (
                             availableQuizzes.map((quiz) => (
-                                <div key={quiz.topic_id} className="quiz-card">
+                                <div key={quiz.topic_id} className={`quiz-card ${quiz.subject.toLowerCase()}`}>
+
                                     <p><strong>Subject:</strong> {quiz.subject}</p>
                                     <p><strong>Topic:</strong> {quiz.topic}</p>
                                     <button

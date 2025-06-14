@@ -67,7 +67,7 @@ function StudentPerformance() {
     return (
         <div className="performance-wrapper">
             <div className="performance-container">
-                <img src={schoolLogo} alt="School Logo" className="school-logo-full" />
+                <img src={schoolLogo} alt="School Logo"  className="school-logo-large" />
                 <h2 className="performance-title">
                     {studentName && subjectName
                         ? `${studentName}'s Performance in ${subjectName}`

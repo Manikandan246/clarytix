@@ -8,6 +8,8 @@ import QuizContainer from './components/QuizContainer';
 import AdminPerformancePage from './components/AdminPerformancePage';
 import OldQuizDashboard from './components/OldQuizDashboard'; // ✅ Import this
 import StudentPerformance from './components/StudentPerformance';
+import DefaultersPage from './components/DefaultersPage';
+
 
 function WrappedQuizContainer() {
   const { topicId } = useParams();
@@ -26,6 +28,8 @@ function App() {
         <Route path="/admin/performance/:topicId" element={<AdminPerformancePage />} />
         <Route path="/old-quizzes" element={<OldQuizDashboard />} /> {/* ✅ Add this */}
         <Route path="/admin/student-performance" element={<StudentPerformance />} />
+        <Route path="/admin/defaulters/:topicId" element={<DefaultersPage />} />
+
       </Routes>
     </Router>
   );

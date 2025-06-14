@@ -87,3 +87,11 @@
         width: 100%;
     }
 }
+
+.topic-card {
+    border-left: 6px solid #ffa500; /* Orange for topic-wise */
+}
+
+.student-card {
+    border-left: 6px solid #17a2b8; /* Teal for student-wise */
+}

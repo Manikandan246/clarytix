@@ -2,31 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './OldQuizDashboard.css';
 
-
 function OldQuizDashboard() {
     const studentName = localStorage.getItem('username') || 'Student';
     const schoolLogo = localStorage.getItem('schoolLogoUrl');
     const studentId = localStorage.getItem('userId');
-    const [oldQuizzes, setQuizHistory] = useState([]);
+    const [oldQuizzes, setOldQuizzes] = useState([]);
+    const [selectedSubject, setSelectedSubject] = useState('');
+    const [selectedTopicId, setSelectedTopicId] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchQuizHistory = async () => {
-            console.log('Student ID from localStorage:', studentId);  // ✅ Debug studentId
             try {
                 const response = await fetch(`https://clarytix-backend.onrender.com/student/old-quizzes?studentId=${studentId}`);
                 const data = await response.json();
-                console.log('Response from backend /student/old-quizzes:', data); // ✅ Debug response
-
-                if (data.success && Array.isArray(data.oldQuizzes)) {
-                    setQuizHistory(data.oldQuizzes);
+                if (data.success) {
+                    setOldQuizzes(data.oldQuizzes);
                 } else {
-                    setQuizHistory([]);
-                    console.warn('Unexpected quiz history data format:', data);
+                    setOldQuizzes([]);
                 }
             } catch (error) {
                 console.error('Error fetching quiz history:', error);
-                setQuizHistory([]);
+                setOldQuizzes([]);
                 alert('Error connecting to server');
             }
         };
@@ -34,60 +31,71 @@ function OldQuizDashboard() {
         fetchQuizHistory();
     }, [studentId]);
 
+    const subjectOptions = [...new Set(oldQuizzes.map(q => q.subject))];
+
+    const topicOptions = oldQuizzes
+        .filter(q => q.subject === selectedSubject)
+        .map(q => ({ topic: q.topic, topic_id: q.topic_id }));
+
+    const handleRetake = () => {
+        navigate(`/quiz/${selectedTopicId}`);
+    };
+
     return (
         <div className="dashboard-wrapper">
             <div className="dashboard-container">
                 <img
                     src={schoolLogo}
                     alt="School Logo"
-                    className="dashboard-logo"
+                    className="school-logo-large"
                     onError={(e) => { e.target.src = '/fallback-logo.png'; }}
                 />
                 <h1 className="welcome">Hi, {studentName}</h1>
 
-                <section>
-                    <h2 className="section-title" style={{ textAlign: 'left' }}>Quiz History</h2>
+                <div className="card">
+                    <h3 className="card-title">Previous Quizzes</h3>
+                    <div className="dropdown-row">
+                        <select
+                            className="dropdown"
+                            value={selectedSubject}
+                            onChange={(e) => {
+                                setSelectedSubject(e.target.value);
+                                setSelectedTopicId('');
+                            }}
+                        >
+                            <option value="">Subject</option>
+                            {subjectOptions.map((subj, idx) => (
+                                <option key={idx} value={subj}>{subj}</option>
+                            ))}
+                        </select>
 
-                    <div className="table-wrapper">
-                        <table className="quiz-table">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Topic</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {Array.isArray(oldQuizzes) && oldQuizzes.length > 0 ? (
-                                    oldQuizzes.map((quiz) => (
-                                        <tr key={quiz.topic_id}>
-                                            <td>{quiz.subject}</td>
-                                            <td>{quiz.topic}</td>
-                                            <td>
-                                                <button
-                                                    className="start-btn"
-                                                    onClick={() => navigate(`/quiz/${quiz.topic_id}`)}
-                                                >
-                                                    Retake Quiz
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="3">No previous quizzes</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                        <select
+                            className="dropdown"
+                            value={selectedTopicId}
+                            onChange={(e) => setSelectedTopicId(e.target.value)}
+                            disabled={!selectedSubject}
+                        >
+                            <option value="">Select Topic</option>
+                            {topicOptions.map((q, idx) => (
+                                <option key={idx} value={q.topic_id}>{q.topic}</option>
+                            ))}
+                        </select>
+
+                        <button
+                            className="track-btn"
+                            disabled={!selectedSubject || !selectedTopicId}
+                            onClick={handleRetake}
+                        >
+                            Retake Quiz
+                        </button>
                     </div>
-                </section>
+                </div>
 
-              <div className="action-row" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-    <button className="start-btn" onClick={() => navigate('/student-dashboard')}>
-        Go to Homepage
-    </button>
-</div>
+                <div className="logout-container">
+                    <button className="start-btn" onClick={() => navigate('/student-dashboard')}>
+                        Go to Homepage
+                    </button>
+                </div>
             </div>
         </div>
     );

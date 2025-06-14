@@ -51,7 +51,7 @@ body {
     border-radius: 8px;
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    text-align: left;
+    text-align: center; /* changed from left to center */
 }
 
 .quiz-card p {
@@ -62,11 +62,12 @@ body {
     background-color: #007bff;
     color: white;
     border: none;
-    padding: 8px 14px;
+    padding: 6px 12px; /* slightly smaller */
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     white-space: nowrap;
+    margin-top: 8px;
 }
 
 .start-btn:hover {
@@ -113,7 +114,29 @@ body {
     }
 
     .start-btn {
-        font-size: 13px;
+        font-size: 12px;
         padding: 6px 10px;
     }
+}
+
+
+/* Add these inside your CSS */
+.quiz-card.science {
+    border-left: 6px solid #28a745;
+}
+
+.quiz-card.maths {
+    border-left: 6px solid #17a2b8;
+}
+
+.quiz-card.english {
+    border-left: 6px solid #ffc107;
+}
+
+.quiz-card.social {
+    border-left: 6px solid #fd7e14;
+}
+
+.quiz-card.accountancy {
+    border-left: 6px solid #6f42c1;
 }

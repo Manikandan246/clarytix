@@ -618,6 +618,45 @@ app.get('/admin/student-subject-name', async (req, res) => {
     }
 });
 
+app.get('/admin/defaulters', async (req, res) => {
+    const { topicId, schoolId } = req.query;
+
+    try {
+        const client = await pool.connect();
+
+        const meta = await client.query(
+            `SELECT t.class AS classname, s.name AS subject, t.name AS topic
+             FROM topics t
+             JOIN subjects s ON t.subject_id = s.id
+             WHERE t.id = $1`,
+            [topicId]
+        );
+
+        const result = await client.query(`
+            SELECT u.username
+            FROM users u
+            JOIN students s ON u.id = s.user_id
+            JOIN topics t ON t.class = s.class
+            WHERE u.school_id = $1
+              AND t.id = $2
+              AND u.id NOT IN (
+                  SELECT user_id FROM quiz_attempts WHERE topic_id = $2
+              )
+        `, [schoolId, topicId]);
+
+        client.release();
+
+        res.json({
+            success: true,
+            defaulters: result.rows,
+            ...meta.rows[0]
+        });
+    } catch (err) {
+        console.error('Fetch defaulters error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 
 
 
