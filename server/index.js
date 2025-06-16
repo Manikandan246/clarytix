@@ -666,6 +666,39 @@ app.get('/admin/defaulters', async (req, res) => {
     }
 });
 
+app.post('/teacher/assign-quiz', async (req, res) => {
+    const { schoolId, className, subjectId, topicId, teacherId } = req.body;
+
+    try {
+        const client = await pool.connect();
+
+        // Optional: check if already assigned
+        const checkResult = await client.query(
+            `SELECT id FROM quiz_assignments 
+             WHERE school_id = $1 AND class = $2 AND subject_id = $3 AND topic_id = $4`,
+            [schoolId, className, subjectId, topicId]
+        );
+
+        if (checkResult.rows.length > 0) {
+            client.release();
+            return res.status(400).json({ success: false, message: 'Quiz already assigned.' });
+        }
+
+        await client.query(
+            `INSERT INTO quiz_assignments (school_id, class, subject_id, topic_id, assigned_by)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [schoolId, className, subjectId, topicId, teacherId]
+        );
+
+        client.release();
+        res.json({ success: true, message: 'Quiz sent successfully!' });
+    } catch (err) {
+        console.error('Assign quiz error:', err);
+        res.status(500).json({ success: false, message: 'Server error while assigning quiz.' });
+    }
+});
+
+
 
 
 

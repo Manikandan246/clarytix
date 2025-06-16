@@ -82,7 +82,7 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
 
     return (
         <div className="quiz-container">
-            <img src={schoolLogo} alt="School Logo" className="school-logo" />
+            <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
             <h2>{subject} - {topic}</h2>
        {questions.map((q, index) => (
     <div

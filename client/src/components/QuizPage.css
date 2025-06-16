@@ -96,6 +96,7 @@ button:hover {
   border-radius: 8px;
   border: 2px solid transparent;
   background-color: #fff; /* keep background white */
+  text-align: left;
 }
 
 .result-card.correct {
@@ -119,5 +120,13 @@ button:hover {
 
 .result-card .explanation {
   margin-top: 10px;
+}
+
+.result-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
 }
 
