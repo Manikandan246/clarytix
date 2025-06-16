@@ -705,6 +705,27 @@ console.log("Inserting quiz with:", { schoolId, className, subjectId, topicId, t
 });
 
 
+app.get('/admin/assigned-topics', async (req, res) => {
+    const { schoolId, className, subjectId } = req.query;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query(
+            `SELECT DISTINCT t.id, t.name
+             FROM quiz_assignments qa
+             JOIN topics t ON qa.topic_id = t.id
+             WHERE qa.school_id = $1 AND qa.class = $2 AND qa.subject_id = $3`,
+            [schoolId, className, subjectId]
+        );
+        client.release();
+        res.json({ success: true, topics: result.rows });
+    } catch (err) {
+        console.error('Fetch assigned topics error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
 
 
 

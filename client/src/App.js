@@ -9,6 +9,7 @@ import AdminPerformancePage from './components/AdminPerformancePage';
 import OldQuizDashboard from './components/OldQuizDashboard'; // ✅ Import this
 import StudentPerformance from './components/StudentPerformance';
 import DefaultersPage from './components/DefaultersPage';
+import ViewQuestions from './components/ViewQuestions';
 
 
 function WrappedQuizContainer() {
@@ -29,6 +30,7 @@ function App() {
         <Route path="/old-quizzes" element={<OldQuizDashboard />} /> {/* ✅ Add this */}
         <Route path="/admin/student-performance" element={<StudentPerformance />} />
         <Route path="/admin/defaulters/:topicId" element={<DefaultersPage />} />
+        <Route path="/admin/view-questions/:topicId" element={<ViewQuestions />} />
 
       </Routes>
     </Router>

@@ -95,3 +95,7 @@
 .student-card {
     border-left: 6px solid #17a2b8; /* Teal for student-wise */
 }
+
+.view-questions-card {
+    border-left: 6px solid #6f42c1; /* Purple border for view questions */
+}

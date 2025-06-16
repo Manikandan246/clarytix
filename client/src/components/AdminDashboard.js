@@ -19,6 +19,12 @@ function AdminDashboard() {
     const [studentSubjects, setStudentSubjects] = useState([]);
     const [selectedStudentSubject, setSelectedStudentSubject] = useState('');
 
+    // --- View Questions ---
+    const [viewSubjects, setViewSubjects] = useState([]);
+    const [selectedViewSubject, setSelectedViewSubject] = useState('');
+    const [viewTopics, setViewTopics] = useState([]);
+    const [selectedViewTopicId, setSelectedViewTopicId] = useState('');
+
     // --- Track Performance Topic Wise ---
     useEffect(() => {
         if (selectedClass) {
@@ -81,13 +87,44 @@ function AdminDashboard() {
         navigate(`/admin/student-performance?studentId=${selectedStudent}&subjectId=${selectedStudentSubject}`);
     };
 
+    // --- View Questions ---
+    useEffect(() => {
+        if (selectedClass) {
+            fetch(`https://clarytix-backend.onrender.com/admin/subjects?schoolId=${schoolId}&className=${selectedClass}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) setViewSubjects(data.subjects);
+                    else setViewSubjects([]);
+                    setSelectedViewSubject('');
+                    setViewTopics([]);
+                    setSelectedViewTopicId('');
+                });
+        }
+    }, [selectedClass, schoolId]);
+
+    useEffect(() => {
+        if (selectedClass && selectedViewSubject) {
+            fetch(`https://clarytix-backend.onrender.com/admin/assigned-topics?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedViewSubject}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) setViewTopics(data.topics);
+                    else setViewTopics([]);
+                    setSelectedViewTopicId('');
+                });
+        }
+    }, [selectedClass, selectedViewSubject, schoolId]);
+
+    const handleViewQuestions = () => {
+        navigate(`/admin/view-questions/${selectedViewTopicId}`);
+    };
+
     return (
         <div className="admin-dashboard-wrapper">
             <div className="admin-dashboard-container">
                 <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
 
                 {/* Card 1: Topic Wise */}
-              <div className="card topic-card">
+                <div className="card topic-card">
                     <h3 className="card-title">Track Performance Topic Wise</h3>
                     <div className="dropdown-row">
                         <select className="dropdown" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
@@ -104,7 +141,7 @@ function AdminDashboard() {
                             disabled={!selectedClass}
                         >
                             <option value="">Subject</option>
-                            {subjects.map((subject) => (
+                            {subjects.map(subject => (
                                 <option key={subject.id} value={subject.id}>{subject.name}</option>
                             ))}
                         </select>
@@ -115,8 +152,8 @@ function AdminDashboard() {
                             onChange={(e) => setSelectedTopicId(e.target.value)}
                             disabled={!selectedSubject}
                         >
-                            <option value="">Select Topic</option>
-                            {topics.map((topic) => (
+                            <option value="">Topic</option>
+                            {topics.map(topic => (
                                 <option key={topic.id} value={topic.id}>{topic.name}</option>
                             ))}
                         </select>
@@ -149,7 +186,7 @@ function AdminDashboard() {
                             disabled={!selectedClass}
                         >
                             <option value="">Student</option>
-                            {students.map((student) => (
+                            {students.map(student => (
                                 <option key={student.id} value={student.id}>{student.username}</option>
                             ))}
                         </select>
@@ -161,7 +198,7 @@ function AdminDashboard() {
                             disabled={!selectedStudent}
                         >
                             <option value="">Subject</option>
-                            {studentSubjects.map((subj) => (
+                            {studentSubjects.map(subj => (
                                 <option key={subj.id} value={subj.id}>{subj.name}</option>
                             ))}
                         </select>
@@ -172,6 +209,51 @@ function AdminDashboard() {
                             onClick={handleTrackStudentWise}
                         >
                             Track Performance
+                        </button>
+                    </div>
+                </div>
+
+                {/* Card 3: View Questions */}
+                <div className="card view-questions-card">
+                    <h3 className="card-title">View Questions</h3>
+                    <div className="dropdown-row">
+                        <select className="dropdown" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
+                            <option value="">Class</option>
+                            {Array.from({ length: 8 }, (_, i) => (
+                                <option key={i + 5} value={`Class ${i + 5}`}>Class {i + 5}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            className="dropdown"
+                            value={selectedViewSubject}
+                            onChange={(e) => setSelectedViewSubject(e.target.value)}
+                            disabled={!selectedClass}
+                        >
+                            <option value="">Subject</option>
+                            {viewSubjects.map(subject => (
+                                <option key={subject.id} value={subject.id}>{subject.name}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            className="dropdown"
+                            value={selectedViewTopicId}
+                            onChange={(e) => setSelectedViewTopicId(e.target.value)}
+                            disabled={!selectedViewSubject}
+                        >
+                            <option value="">Topic</option>
+                            {viewTopics.map(topic => (
+                                <option key={topic.id} value={topic.id}>{topic.name}</option>
+                            ))}
+                        </select>
+
+                        <button
+                            className="track-btn"
+                            disabled={!selectedClass || !selectedViewSubject || !selectedViewTopicId}
+                            onClick={handleViewQuestions}
+                        >
+                            View Questions
                         </button>
                     </div>
                 </div>
