@@ -247,9 +247,12 @@ app.get('/student/quizzes', async (req, res) => {
     try {
         const client = await pool.connect();
 
-        // 1. Get student class
+        // 1. Get student class and school
         const studentResult = await client.query(
-            'SELECT class FROM students WHERE user_id = $1',
+            `SELECT s.class, u.school_id
+             FROM students s
+             JOIN users u ON s.user_id = u.id
+             WHERE s.user_id = $1`,
             [studentId]
         );
 
@@ -259,21 +262,23 @@ app.get('/student/quizzes', async (req, res) => {
             return res.json({ success: true, availableQuizzes: [] });
         }
 
-        const studentClass = studentResult.rows[0].class;
-        console.log(`Student ${studentId} is in class: ${studentClass}`);
+        const { class: studentClass, school_id: schoolId } = studentResult.rows[0];
+        console.log(`Student ${studentId} is in class: ${studentClass}, school: ${schoolId}`);
 
-        // 2. Fetch quizzes for that class not yet attempted by student
+        // 2. Fetch quizzes that were assigned by a teacher from the student's school
+        // and not yet attempted by the student
         const quizResult = await client.query(
-            `SELECT DISTINCT q.topic_id, s.name AS subject, t.name AS topic
-             FROM questions q
-             JOIN topics t ON q.topic_id = t.id
-             JOIN subjects s ON t.subject_id = s.id
-             WHERE q.class = $1
+            `SELECT DISTINCT t.id AS topic_id, s.name AS subject, t.name AS topic
+             FROM quiz_assignments qa
+             JOIN topics t ON qa.topic_id = t.id
+             JOIN subjects s ON qa.subject_id = s.id
+             WHERE qa.class = $1
+               AND qa.school_id = $2
                AND NOT EXISTS (
-                   SELECT 1 FROM quiz_attempts qa
-                   WHERE qa.user_id = $2 AND qa.topic_id = q.topic_id
+                   SELECT 1 FROM quiz_attempts a
+                   WHERE a.user_id = $3 AND a.topic_id = qa.topic_id
                )`,
-            [studentClass, studentId]
+            [studentClass, schoolId, studentId]
         );
 
         client.release();

@@ -4,6 +4,7 @@ import './TeacherDashboard.css';
 function TeacherDashboard() {
     const schoolId = localStorage.getItem('schoolId');
     const schoolLogo = localStorage.getItem('schoolLogoUrl');
+    const teacherId = localStorage.getItem('userId');
 
     const [selectedClass, setSelectedClass] = useState('');
     const [subjects, setSubjects] = useState([]);
@@ -46,7 +47,8 @@ function TeacherDashboard() {
                 schoolId,
                 className: selectedClass,
                 subjectId: selectedSubject,
-                topicId: selectedTopicId
+                topicId: selectedTopicId,
+                teacherId
             })
         })
             .then(res => res.json())
