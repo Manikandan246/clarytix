@@ -119,7 +119,7 @@ app.get('/quiz/questions', async (req, res) => {
         const client = await pool.connect();
 
         const questionResult = await client.query(
-            `SELECT id, question_text, option_a, option_b, option_c, option_d
+            `SELECT id, question_text, option_a, option_b, option_c, option_d,correct_answer AS correct_option,explanation
              FROM questions
              WHERE topic_id = $1`,
             [topicId]
