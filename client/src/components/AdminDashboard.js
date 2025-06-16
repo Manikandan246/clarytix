@@ -40,17 +40,19 @@ function AdminDashboard() {
         }
     }, [selectedClass, schoolId]);
 
-    useEffect(() => {
-        if (selectedClass && selectedSubject) {
-            fetch(`https://clarytix-backend.onrender.com/admin/topics?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) setTopics(data.topics);
-                    else setTopics([]);
-                    setSelectedTopicId('');
-                });
-        }
-    }, [selectedClass, selectedSubject, schoolId]);
+ // Replace this existing useEffect for topics
+useEffect(() => {
+    if (selectedClass && selectedSubject) {
+        fetch(`https://clarytix-backend.onrender.com/admin/assigned-topics?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) setTopics(data.topics);
+                else setTopics([]);
+                setSelectedTopicId('');
+            });
+    }
+}, [selectedClass, selectedSubject, schoolId]);
+
 
     const handleTrackTopicWise = () => {
         navigate(`/admin/performance/${selectedTopicId}`);
