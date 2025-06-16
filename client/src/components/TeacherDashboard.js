@@ -39,7 +39,7 @@ function TeacherDashboard() {
     }, [selectedClass, selectedSubject, schoolId]);
 
     const handleSendQuiz = () => {
-        fetch(`https://clarytix-backend.onrender.com/teacher/send-quiz`, {
+        fetch(`https://clarytix-backend.onrender.com/teacher/assign-quiz`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

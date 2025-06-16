@@ -683,6 +683,7 @@ app.post('/teacher/assign-quiz', async (req, res) => {
             client.release();
             return res.status(400).json({ success: false, message: 'Quiz already assigned.' });
         }
+console.log("Inserting quiz with:", { schoolId, className, subjectId, topicId, teacherId });
 
         await client.query(
             `INSERT INTO quiz_assignments (school_id, class, subject_id, topic_id, assigned_by)
@@ -693,7 +694,7 @@ app.post('/teacher/assign-quiz', async (req, res) => {
         client.release();
         res.json({ success: true, message: 'Quiz sent successfully!' });
     } catch (err) {
-        console.error('Assign quiz error:', err);
+        console.error('Assign quiz error:', err.stack);
         res.status(500).json({ success: false, message: 'Server error while assigning quiz.' });
     }
 });
