@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './QuizPage.css';
 
 function ResultPage({ results, onBackToDashboard }) {
     const schoolLogo = localStorage.getItem('schoolLogoUrl');
+
+        useEffect(() => {
+        window.scrollTo(0, 0); // ✅ Scroll to top when the component mounts
+    }, []);
 
     return (
         <div className="quiz-container">

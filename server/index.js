@@ -774,6 +774,71 @@ app.get('/admin/question-analysis', async (req, res) => {
     }
 });
 
+app.get('/superadmin/all-topics', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT id, name FROM topics ORDER BY name');
+        client.release();
+        res.json({ success: true, topics: result.rows });
+    } catch (err) {
+        console.error('Error fetching topics:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.get('/superadmin/questions', async (req, res) => {
+    const { topicId } = req.query;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query(
+            `SELECT id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation 
+             FROM questions 
+             WHERE topic_id = $1`,
+            [topicId]
+        );
+        client.release();
+        res.json({ success: true, questions: result.rows });
+    } catch (err) {
+        console.error('Error fetching questions:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
+app.post('/superadmin/update-questions', async (req, res) => {
+    const { questions } = req.body;
+
+    try {
+        const client = await pool.connect();
+
+        for (const q of questions) {
+            await client.query(
+                `UPDATE questions
+                 SET question_text = $1, option_a = $2, option_b = $3, option_c = $4, option_d = $5, 
+                     correct_answer = $6, explanation = $7
+                 WHERE id = $8`,
+                [
+                    q.question_text,
+                    q.option_a,
+                    q.option_b,
+                    q.option_c,
+                    q.option_d,
+                    q.correct_answer,
+                    q.explanation,
+                    q.id
+                ]
+            );
+        }
+
+        client.release();
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error updating questions:', err);
+        res.status(500).json({ success: false, message: 'Update failed' });
+    }
+});
+
 
 
 

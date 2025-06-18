@@ -29,7 +29,9 @@ function LoginPage() {
                     navigate('/teacher-dashboard');
                 } else if (data.role === 'admin') {
                     navigate('/admin-dashboard');
-                }
+                } else if (data.role === 'superadmin') {
+        navigate('/superadmin-editor');
+    }
             } else {
                 alert('Login failed: ' + data.message);
             }

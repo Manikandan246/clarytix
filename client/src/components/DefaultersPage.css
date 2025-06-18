@@ -14,11 +14,7 @@
     text-align: center;
 }
 
-.defaulters-title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
+
 
 .defaulters-subtitle {
     font-size: 16px;
@@ -69,10 +65,6 @@
 @media (max-width: 480px) {
     .defaulters-container {
         padding: 20px;
-    }
-
-    .defaulters-title {
-        font-size: 20px;
     }
 
     .defaulters-subtitle {
