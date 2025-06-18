@@ -6,11 +6,11 @@ import TeacherDashboard from './components/TeacherDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import QuizContainer from './components/QuizContainer';
 import AdminPerformancePage from './components/AdminPerformancePage';
-import OldQuizDashboard from './components/OldQuizDashboard'; // ✅ Import this
+import OldQuizDashboard from './components/OldQuizDashboard';
 import StudentPerformance from './components/StudentPerformance';
 import DefaultersPage from './components/DefaultersPage';
 import ViewQuestions from './components/ViewQuestions';
-
+import QuestionAnalysis from './components/QuestionAnalysis'; // ✅ Import
 
 function WrappedQuizContainer() {
   const { topicId } = useParams();
@@ -27,11 +27,11 @@ function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/quiz/:topicId" element={<WrappedQuizContainer />} />
         <Route path="/admin/performance/:topicId" element={<AdminPerformancePage />} />
-        <Route path="/old-quizzes" element={<OldQuizDashboard />} /> {/* ✅ Add this */}
+        <Route path="/old-quizzes" element={<OldQuizDashboard />} />
         <Route path="/admin/student-performance" element={<StudentPerformance />} />
         <Route path="/admin/defaulters/:topicId" element={<DefaultersPage />} />
         <Route path="/admin/view-questions/:topicId" element={<ViewQuestions />} />
-
+        <Route path="/admin/question-analysis/:topicId" element={<QuestionAnalysis />} /> {/* ✅ New Route */}
       </Routes>
     </Router>
   );

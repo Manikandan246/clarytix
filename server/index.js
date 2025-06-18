@@ -725,6 +725,35 @@ app.get('/admin/assigned-topics', async (req, res) => {
     }
 });
 
+app.get('/admin/question-analysis', async (req, res) => {
+    const { topicId } = req.query;
+
+    try {
+        const client = await pool.connect();
+
+        const result = await client.query(`
+            SELECT q.question_text,
+                   COUNT(qr.id) AS total,
+                   COUNT(CASE WHEN qr.is_correct = true THEN 1 END) AS correct,
+                   COUNT(CASE WHEN qr.is_correct = false THEN 1 END) AS incorrect
+            FROM questions q
+            LEFT JOIN quiz_attempt_responses qr ON qr.question_id = q.id
+            LEFT JOIN quiz_attempts qa ON qa.attempt_id = qr.attempt_id
+            WHERE q.topic_id = $1 AND qa.attempt_number = 1
+            GROUP BY q.id
+            ORDER BY incorrect DESC
+        `, [topicId]);
+
+        client.release();
+        res.json({ success: true, analysis: result.rows });
+    } catch (err) {
+        console.error('Question analysis error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
+
 
 
 

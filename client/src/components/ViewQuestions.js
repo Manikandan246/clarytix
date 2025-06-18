@@ -38,9 +38,7 @@ function ViewQuestions() {
         fetchQuestions();
     }, [topicId]);
 
-    if (loading) {
-        return <div>Loading questions...</div>;
-    }
+    if (loading) return <div>Loading questions...</div>;
 
     return (
         <div className="view-questions-container">
@@ -48,11 +46,7 @@ function ViewQuestions() {
             <h2>{subject} - {topic}</h2>
 
             {questions.map((q, index) => (
-                <div
-                    key={q.id}
-                    className="question-card"
-                    style={{ borderLeftColor: borderColors[index % borderColors.length] }}
-                >
+                <div key={q.id} className="question-card" style={{ borderLeftColor: borderColors[index % borderColors.length] }}>
                     <h4>Q{index + 1}. {q.question_text}</h4>
                     <ul className="option-list">
                         <li><strong>A:</strong> {q.option_a}</li>
@@ -60,16 +54,14 @@ function ViewQuestions() {
                         <li><strong>C:</strong> {q.option_c}</li>
                         <li><strong>D:</strong> {q.option_d}</li>
                     </ul>
-                    <p className="correct-answer">
-    <strong>Correct Answer:</strong> {q.correct_option ? q.correct_option.toUpperCase() : 'N/A'}
-</p>
-
+                    <p className="correct-answer"><strong>Correct Answer:</strong> {q.correct_answer?.toUpperCase() || 'N/A'}</p>
                     <p className="explanation"><strong>Explanation:</strong> {q.explanation}</p>
                 </div>
             ))}
 
             <div className="result-buttons">
                 <button onClick={() => navigate('/admin-dashboard')}>Go to Homepage</button>
+                <button onClick={() => navigate(`/admin/question-analysis/${topicId}`)}>Question Analysis</button>
             </div>
         </div>
     );
