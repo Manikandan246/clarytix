@@ -724,14 +724,14 @@ app.get('/admin/assigned-topics', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
 app.get('/admin/question-analysis', async (req, res) => {
     const { topicId } = req.query;
 
     try {
         const client = await pool.connect();
 
-        const result = await client.query(`
+        // Fetch analysis data
+        const analysisResult = await client.query(`
             SELECT q.question_text,
                    COUNT(qr.id) AS total,
                    COUNT(CASE WHEN qr.is_correct = true THEN 1 END) AS correct,
@@ -744,8 +744,30 @@ app.get('/admin/question-analysis', async (req, res) => {
             ORDER BY incorrect DESC
         `, [topicId]);
 
+        // Fetch topic meta (class, subject, topic)
+        const metaResult = await client.query(`
+            SELECT t.class AS classname, s.name AS subject, t.name AS topic
+            FROM topics t
+            JOIN subjects s ON t.subject_id = s.id
+            WHERE t.id = $1
+        `, [topicId]);
+
         client.release();
-        res.json({ success: true, analysis: result.rows });
+
+        if (metaResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Topic not found' });
+        }
+
+        const { classname, subject, topic } = metaResult.rows[0];
+
+        res.json({
+            success: true,
+            analysis: analysisResult.rows,
+            classname,
+            subject,
+            topic
+        });
+
     } catch (err) {
         console.error('Question analysis error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
