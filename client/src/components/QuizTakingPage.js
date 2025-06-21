@@ -11,7 +11,6 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
     const [topic, setTopic] = useState('');
     const borderColors = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#dc3545'];
 
-
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -39,8 +38,6 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
     };
 
     const handleSubmit = async () => {
-        console.log('Answers object:', answers);  // ✅ log answers to console
-
         const unanswered = questions.find(q => !(q.id in answers));
         if (unanswered) {
             const questionNumber = questions.findIndex(q => q.id === unanswered.id) + 1;
@@ -76,42 +73,44 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
         }
     };
 
-    if (loading) {
-        return <div>Loading quiz...</div>;
-    }
+    if (loading) return <div>Loading quiz...</div>;
 
     return (
         <div className="quiz-container">
             <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
             <h2>{subject} - {topic}</h2>
-       {questions.map((q, index) => (
-    <div
-        key={q.id}
-        className="quiz-question-card"
-        style={{ borderLeftColor: borderColors[index % borderColors.length] }}
-    >
-        <h4>Q{index + 1}. {q.question_text}</h4>
-        <div className="options">
-            {['A', 'B', 'C', 'D'].map((opt) => (
-                <label key={opt} className={`option-label ${answers[q.id] === opt ? 'selected' : ''}`}>
-                    <input
-                        type="radio"
-                        name={`question_${q.id}`}
-                        value={opt}
-                        checked={answers[q.id] === opt}
-                        onChange={() => handleOptionSelect(q.id, opt)}
-                    />
-                    {opt}: {q[`option_${opt.toLowerCase()}`]}
-                </label>
+            {questions.map((q, index) => (
+                <div
+                    key={q.id}
+                    className="quiz-question-card"
+                    style={{ borderLeft: `6px solid ${borderColors[index % borderColors.length]}` }}
+                >
+                    <h4>Q{index + 1}. {q.question_text}</h4>
+
+                    {/* Display image if available */}
+                    {q.image_url && (
+                        <div className="question-image-wrapper">
+                            <img src={q.image_url} alt="Visual related to the question" className="question-image" />
+                        </div>
+                    )}
+
+                    <div className="options">
+                        {['A', 'B', 'C', 'D'].map((opt) => (
+                            <label key={opt} className={`option-label ${answers[q.id] === opt ? 'selected' : ''}`}>
+                                <input
+                                    type="radio"
+                                    name={`question_${q.id}`}
+                                    value={opt}
+                                    checked={answers[q.id] === opt}
+                                    onChange={() => handleOptionSelect(q.id, opt)}
+                                />
+                                <span><strong>{opt}:</strong> {q[`option_${opt.toLowerCase()}`]}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
             ))}
-        </div>
-    </div>
-))}
-
-
-            <button onClick={handleSubmit}>
-                Submit Quiz
-            </button>
+            <button className="submit-btn" onClick={handleSubmit}>Submit Quiz</button>
         </div>
     );
 }

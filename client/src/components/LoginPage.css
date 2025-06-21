@@ -33,14 +33,16 @@
     padding: 30px 25px;
   }
   
-  .login-form input {
-    margin-bottom: 15px;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-  }
+ .login-form input {
+  margin-bottom: 15px;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 100%;                 /* Ensure it uses the full form width */
+  box-sizing: border-box;      /* Include padding and border in width */
+}
+
   
   .login-form input:focus {
     border-color: #2575fc;
