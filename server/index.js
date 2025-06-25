@@ -774,6 +774,7 @@ app.get('/admin/question-analysis', async (req, res) => {
     }
 });
 
+
 app.get('/superadmin/all-topics', async (req, res) => {
     try {
         const client = await pool.connect();

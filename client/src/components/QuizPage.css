@@ -96,3 +96,40 @@ h2 {
 .submit-btn:hover {
     background-color: #0056b3;
 }
+
+.result-card {
+  padding: 16px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  background-color: #fff;
+  border-left: 6px solid #ccc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  text-align: left;
+}
+
+.result-card.correct {
+  border-left-color: #28a745; /* green */
+}
+
+.result-card.incorrect {
+  border-left-color: #dc3545; /* red */
+}
+
+.result-card h4 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+}
+
+.result-card p {
+  margin: 6px 0;
+  color: #333;
+  font-size: 15px;
+}
+
+.result-card .explanation {
+  margin-top: 10px;
+  font-style: italic;
+  color: #555;
+}
