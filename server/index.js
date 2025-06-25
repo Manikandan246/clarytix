@@ -725,12 +725,11 @@ app.get('/admin/assigned-topics', async (req, res) => {
     }
 });
 app.get('/admin/question-analysis', async (req, res) => {
-    const { topicId } = req.query;
+    const { topicId, schoolId } = req.query;
 
     try {
         const client = await pool.connect();
 
-        // Fetch analysis data
         const analysisResult = await client.query(`
             SELECT q.question_text,
                    COUNT(qr.id) AS total,
@@ -738,13 +737,13 @@ app.get('/admin/question-analysis', async (req, res) => {
                    COUNT(CASE WHEN qr.is_correct = false THEN 1 END) AS incorrect
             FROM questions q
             LEFT JOIN quiz_attempt_responses qr ON qr.question_id = q.id
-            LEFT JOIN quiz_attempts qa ON qa.attempt_id = qr.attempt_id
-            WHERE q.topic_id = $1 AND qa.attempt_number = 1
-            GROUP BY q.id
+            LEFT JOIN quiz_attempts qa ON qa.attempt_id = qr.attempt_id AND qa.attempt_number = 1
+            LEFT JOIN users u ON qa.user_id = u.id
+            WHERE q.topic_id = $1 AND (u.school_id = $2 OR u.school_id IS NULL)
+            GROUP BY q.id, q.question_text
             ORDER BY incorrect DESC
-        `, [topicId]);
+        `, [topicId, schoolId]);
 
-        // Fetch topic meta (class, subject, topic)
         const metaResult = await client.query(`
             SELECT t.class AS classname, s.name AS subject, t.name AS topic
             FROM topics t
@@ -773,7 +772,6 @@ app.get('/admin/question-analysis', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
 
 app.get('/superadmin/all-topics', async (req, res) => {
     try {
