@@ -731,15 +731,27 @@ app.get('/admin/question-analysis', async (req, res) => {
         const client = await pool.connect();
 
         const analysisResult = await client.query(`
-            SELECT q.question_text,
-                   COUNT(qr.id) AS total,
-                   COUNT(CASE WHEN qr.is_correct = true THEN 1 END) AS correct,
-                   COUNT(CASE WHEN qr.is_correct = false THEN 1 END) AS incorrect
+            SELECT 
+                q.question_text,
+                COUNT(qr.id) AS total,
+                COUNT(CASE WHEN qr.is_correct = true THEN 1 END) AS correct,
+                COUNT(CASE WHEN qr.is_correct = false THEN 1 END) AS incorrect
             FROM questions q
             LEFT JOIN quiz_attempt_responses qr ON qr.question_id = q.id
-            LEFT JOIN quiz_attempts qa ON qa.attempt_id = qr.attempt_id AND qa.attempt_number = 1
+            LEFT JOIN (
+                SELECT qa1.*
+                FROM quiz_attempts qa1
+                INNER JOIN (
+                    SELECT user_id, topic_id, MIN(attempt_number) AS min_attempt
+                    FROM quiz_attempts
+                    GROUP BY user_id, topic_id
+                ) first_attempts
+                ON qa1.user_id = first_attempts.user_id 
+                AND qa1.topic_id = first_attempts.topic_id 
+                AND qa1.attempt_number = first_attempts.min_attempt
+            ) qa ON qr.attempt_id = qa.attempt_id
             LEFT JOIN users u ON qa.user_id = u.id
-            WHERE q.topic_id = $1 AND (u.school_id = $2 OR u.school_id IS NULL)
+            WHERE q.topic_id = $1 AND u.school_id = $2
             GROUP BY q.id, q.question_text
             ORDER BY incorrect DESC
         `, [topicId, schoolId]);

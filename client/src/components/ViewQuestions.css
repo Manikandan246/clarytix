@@ -58,9 +58,12 @@ h2 {
 
 .result-buttons {
     display: flex;
-    justify-content: center;
+    flex-direction: column; /* ✅ Stack buttons vertically */
+    align-items: center;
+    gap: 12px; /* ✅ Space between buttons */
     margin-top: 30px;
 }
+
 
 .result-buttons button {
     padding: 12px 24px;

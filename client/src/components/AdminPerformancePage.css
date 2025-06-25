@@ -83,3 +83,11 @@ h2 {
 .back-button-container button:hover {
     background-color: #0056b3;
 }
+
+@media (max-width: 480px) {
+  .school-logo-large {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+  }
+}
