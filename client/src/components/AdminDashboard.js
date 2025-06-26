@@ -19,6 +19,9 @@ function AdminDashboard() {
     const [studentSubjects, setStudentSubjects] = useState([]);
     const [selectedStudentSubject, setSelectedStudentSubject] = useState('');
 
+    const [quizSubjects, setQuizSubjects] = useState([]);
+    const [selectedQuizSubject, setSelectedQuizSubject] = useState('');
+
     // --- View Questions ---
     const [viewSubjects, setViewSubjects] = useState([]);
     const [selectedViewSubject, setSelectedViewSubject] = useState('');
@@ -118,6 +121,23 @@ useEffect(() => {
 
     const handleViewQuestions = () => {
         navigate(`/admin/view-questions/${selectedViewTopicId}`);
+    };
+
+     // Fetch subjects for the Quiz Count card
+    useEffect(() => {
+        if (selectedClass) {
+            fetch(`https://clarytix-backend.onrender.com/admin/subjects?schoolId=${schoolId}&className=${selectedClass}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) setQuizSubjects(data.subjects);
+                    else setQuizSubjects([]);
+                    setSelectedQuizSubject('');
+                });
+        }
+    }, [selectedClass, schoolId]);
+
+    const handleViewQuizCount = () => {
+        navigate(`/admin/quiz-count?class=${selectedClass}&subjectId=${selectedQuizSubject}`);
     };
 
     return (
@@ -256,6 +276,45 @@ useEffect(() => {
                             onClick={handleViewQuestions}
                         >
                             View Questions
+                        </button>
+                    </div>
+                </div>
+
+      
+
+                {/* -- Quiz Count Card -- */}
+                <div className="card vc-quiz-count-card">
+                    <h3 className="card-title">Quiz Count</h3>
+                    <div className="vc-dropdown-row">
+                        <select
+                            className="vc-dropdown"
+                            value={selectedClass}
+                            onChange={(e) => setSelectedClass(e.target.value)}
+                        >
+                            <option value="">Class</option>
+                            {Array.from({ length: 8 }, (_, i) => (
+                                <option key={i + 5} value={`Class ${i + 5}`}>Class {i + 5}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            className="vc-dropdown"
+                            value={selectedQuizSubject}
+                            onChange={(e) => setSelectedQuizSubject(e.target.value)}
+                            disabled={!selectedClass}
+                        >
+                            <option value="">Subject</option>
+                            {quizSubjects.map((subject) => (
+                                <option key={subject.id} value={subject.id}>{subject.name}</option>
+                            ))}
+                        </select>
+
+                        <button
+                            className="vc-btn"
+                            disabled={!selectedClass || !selectedQuizSubject}
+                            onClick={handleViewQuizCount}
+                        >
+                            View Count
                         </button>
                     </div>
                 </div>

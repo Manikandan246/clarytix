@@ -53,7 +53,7 @@ function OldQuizDashboard() {
                 <h1 className="welcome">Hi, {studentName}</h1>
 
                 <div className="card">
-                    <h3 className="card-title">Previous Quizzes</h3>
+                    <h3 className="card-title">Previous Quizzes ({oldQuizzes.length})</h3>
                     <div className="dropdown-row">
                         <select
                             className="dropdown"

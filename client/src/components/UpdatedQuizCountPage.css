@@ -1,0 +1,75 @@
+.vc-container {
+    background-color: #fff;
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    text-align: center;
+}
+
+.vc-logo {
+    max-width: 200px;
+    margin-bottom: 20px;
+}
+
+.vc-count {
+    font-size: 18px;
+    margin: 20px 0;
+    color: #333;
+}
+
+.vc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.vc-table th, .vc-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.vc-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+.vc-button-group {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.vc-btn {
+    padding: 10px 20px;
+    font-size: 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.vc-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Dropdown row style */
+.vc-dropdown-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.vc-dropdown {
+    flex: 1;
+    min-width: 150px;
+    height: 40px;
+    padding: 6px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}

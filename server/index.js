@@ -850,11 +850,77 @@ app.post('/superadmin/update-questions', async (req, res) => {
     }
 });
 
+app.get('/admin/quiz-count', async (req, res) => {
+    const { schoolId, className, subjectId } = req.query;
 
+    if (!schoolId || !className || !subjectId) {
+        return res.status(400).json({ success: false, message: 'Missing required parameters' });
+    }
 
+    try {
+        const client = await pool.connect();
 
+        // Get number of quizzes sent
+        const quizCountResult = await client.query(`
+            SELECT COUNT(*) AS quiz_count
+            FROM quiz_assignments qa
+            JOIN topics t ON qa.topic_id = t.id
+            WHERE qa.school_id = $1 AND t.class = $2 AND t.subject_id = $3
+        `, [schoolId, className, subjectId]);
 
+        const quizCount = parseInt(quizCountResult.rows[0]?.quiz_count || 0);
 
+        // Get all students for the class in that school
+        const studentsResult = await client.query(`
+            SELECT id, username FROM users
+            WHERE school_id = $1 AND class = $2 AND role = 'student'
+        `, [schoolId, className]);
+
+        const students = studentsResult.rows;
+
+        // For each student, get number of attempted quizzes for this subject
+        const attemptedResult = await client.query(`
+            SELECT u.id AS student_id, COUNT(DISTINCT qa.topic_id) AS attempted
+            FROM users u
+            JOIN quiz_attempts qa ON qa.user_id = u.id AND qa.attempt_number = 1
+            JOIN topics t ON qa.topic_id = t.id
+            WHERE u.school_id = $1 AND u.class = $2 AND u.role = 'student' AND t.subject_id = $3
+            GROUP BY u.id
+        `, [schoolId, className, subjectId]);
+
+        const attemptedMap = {};
+        attemptedResult.rows.forEach(row => {
+            attemptedMap[row.student_id] = parseInt(row.attempted);
+        });
+
+        const enrichedStudents = students.map(s => {
+            const attempted = attemptedMap[s.id] || 0;
+            const unattempted = Math.max(quizCount - attempted, 0);
+            return {
+                username: s.username,
+                attempted,
+                unattempted
+            };
+        });
+
+        // Get subject name
+        const subjectResult = await client.query(`SELECT name FROM subjects WHERE id = $1`, [subjectId]);
+        const subjectName = subjectResult.rows[0]?.name || '';
+
+        client.release();
+
+        res.json({
+            success: true,
+            quizCount,
+            students: enrichedStudents,
+            subject: subjectName
+        });
+
+    } catch (err) {
+        console.error('Error in /admin/quiz-count:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 
 
 
