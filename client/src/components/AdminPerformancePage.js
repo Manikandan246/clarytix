@@ -156,6 +156,7 @@ function AdminPerformancePage() {
 
             <div className="back-button-container">
                 <button onClick={() => navigate(`/admin/defaulters/${topicId}`)}>Unattempted List</button>
+                <button onClick={() => navigate(`/admin/class-details/${topicId}`)}>Class Details</button>
                 <button onClick={() => navigate('/admin-dashboard')}>Back to Homepage</button>
             </div>
         </div>

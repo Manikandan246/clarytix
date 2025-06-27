@@ -925,6 +925,46 @@ app.get('/admin/quiz-count', async (req, res) => {
 });
 
 
+app.get('/admin/class-details', async (req, res) => {
+    const { topicId, schoolId } = req.query;
+
+    try {
+        const client = await pool.connect();
+
+        const metaResult = await client.query(`
+            SELECT t.class AS "className", s.name AS subject, t.name AS topic
+            FROM topics t
+            JOIN subjects s ON t.subject_id = s.id
+            WHERE t.id = $1
+        `, [topicId]);
+
+        const detailsResult = await client.query(`
+            SELECT u.username, qa.score, qa.time_taken
+            FROM quiz_attempts qa
+            JOIN users u ON qa.user_id = u.id
+            WHERE qa.topic_id = $1 AND qa.attempt_number = 1 AND u.school_id = $2
+            ORDER BY u.username
+        `, [topicId, schoolId]);
+
+        client.release();
+
+        if (metaResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Topic not found' });
+        }
+
+        res.json({
+            success: true,
+            meta: metaResult.rows[0],
+            details: detailsResult.rows
+        });
+
+    } catch (err) {
+        console.error('Class details error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
 
 // =====================
 // Serve React static files (client/build) in production

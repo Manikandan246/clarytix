@@ -1,0 +1,47 @@
+.cd-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 30px 15px;
+}
+
+.cd-container {
+    max-width: 800px;
+    width: 100%;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.06);
+    text-align: center;
+}
+
+.cd-table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+.cd-table th, .cd-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+}
+
+.cd-table th {
+    background-color: #f0f0f0;
+}
+
+.cd-buttons {
+    margin-top: 24px;
+}
+.cd-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.cd-buttons button:hover {
+    background-color: #0056b3;
+}

@@ -13,6 +13,7 @@ import ViewQuestions from './components/ViewQuestions';
 import QuestionAnalysis from './components/QuestionAnalysis'; // ✅ Import
 import SuperAdminEditor from './components/SuperAdminEditor';
 import QuizCountPage from './components/QuizCountPage';
+import ClassDetailsPage from './ClassDetailsPage';
 
 function WrappedQuizContainer() {
   const { topicId } = useParams();
@@ -36,6 +37,7 @@ function App() {
         <Route path="/admin/question-analysis/:topicId" element={<QuestionAnalysis />} /> {/* ✅ New Route */}
         <Route path="/superadmin-editor" element={<SuperAdminEditor />} />
         <Route path="/admin/quiz-count" element={<QuizCountPage />} />
+        <Route path="/admin/class-details/:topicId" element={<ClassDetailsPage />} />
       </Routes>
     </Router>
   );
