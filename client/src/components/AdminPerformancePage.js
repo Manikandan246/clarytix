@@ -79,6 +79,13 @@ function AdminPerformancePage() {
     const leaderboardNames = metrics.leaderboard.map(entry => entry.studentName);
     const leaderboardScores = metrics.leaderboard.map(entry => entry.score);
 
+    // New code for time formatting
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}m ${secs}s`;
+    };
+
     return (
         <div className="admin-container">
             <div className="header-container">
@@ -95,6 +102,10 @@ function AdminPerformancePage() {
                 <div className="metric-card">
                     <p>Average Score</p>
                     <h3>{metrics.averageScore}</h3>
+                </div>
+                <div className="metric-card">
+                    <p>Average Time Taken</p>
+                    <h3>{formatTime(metrics.averageTimeTaken)}</h3> {/* Average time in minutes and seconds */}
                 </div>
                 <div className="metric-card">
                     <p>Highest Score</p>
@@ -143,7 +154,7 @@ function AdminPerformancePage() {
             </div>
 
             <div className="back-button-container">
-                  <button onClick={() => navigate(`/admin/defaulters/${topicId}`)}>Unattempted List</button>
+                <button onClick={() => navigate(`/admin/defaulters/${topicId}`)}>Unattempted List</button>
                 <button onClick={() => navigate('/admin-dashboard')}>Back to Homepage</button>
             </div>
         </div>

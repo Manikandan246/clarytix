@@ -155,7 +155,7 @@ app.get('/quiz/questions', async (req, res) => {
 });
 
 app.post('/quiz/submit', async (req, res) => {
-    const { userId, topicId, answers } = req.body;
+    const { userId, topicId, answers, timeTaken } = req.body;
 
     try {
         const client = await pool.connect();
@@ -192,8 +192,7 @@ app.post('/quiz/submit', async (req, res) => {
         let score = 0;
         const detailedResults = answers.map(({ questionId, selectedOption }) => {
             const correctData = correctAnswersMap[questionId];
-            const correctAnswer = correctData.correctAnswer;
-            const isCorrect = selectedOption === correctAnswer;
+            const isCorrect = selectedOption === correctData.correctAnswer;
 
             if (isCorrect) score += 10;
 
@@ -202,7 +201,7 @@ app.post('/quiz/submit', async (req, res) => {
                 questionText: correctData.questionText,
                 selectedOption,
                 correct: isCorrect,
-                correctAnswer,
+                correctAnswer: correctData.correctAnswer,
                 explanation: correctData.explanation,
                 option_a: correctData.option_a,
                 option_b: correctData.option_b,
@@ -212,10 +211,10 @@ app.post('/quiz/submit', async (req, res) => {
         });
 
         const attemptInsert = await client.query(
-            `INSERT INTO quiz_attempts (user_id, topic_id, score, attempt_number)
-             VALUES ($1, $2, $3, $4)
+            `INSERT INTO quiz_attempts (user_id, topic_id, score, attempt_number, time_taken)
+             VALUES ($1, $2, $3, $4, $5)
              RETURNING attempt_id`,
-            [userId, topicId, score, attemptNumber]
+            [userId, topicId, score, attemptNumber, timeTaken]
         );
         const attemptId = attemptInsert.rows[0].attempt_id;
 
@@ -316,7 +315,6 @@ app.get('/admin/quizzes', async (req, res) => {
 app.get('/admin/performance-metrics', async (req, res) => {
     let { topicId, schoolId } = req.query;
 
-    // Convert to integers safely
     topicId = parseInt(topicId);
     schoolId = parseInt(schoolId);
 
@@ -345,7 +343,7 @@ app.get('/admin/performance-metrics', async (req, res) => {
         const { topic, subject, class: className } = topicInfoResult.rows[0];
 
         const result = await client.query(
-           `SELECT qa.user_id, u.username, qa.score
+            `SELECT qa.user_id, u.username, qa.score, qa.time_taken
              FROM quiz_attempts qa
              JOIN users u ON qa.user_id = u.id
              WHERE qa.topic_id = $1 AND qa.attempt_number = 1 AND u.school_id = $2`,
@@ -365,6 +363,7 @@ app.get('/admin/performance-metrics', async (req, res) => {
                 averageScore: 0,
                 highestScore: 0,
                 lowestScore: 0,
+                averageTimeSpentSeconds: 0,
                 scoreDistribution: [0, 0, 0, 0, 0],
                 leaderboard: []
             });
@@ -375,6 +374,9 @@ app.get('/admin/performance-metrics', async (req, res) => {
         const averageScore = (scores.reduce((sum, s) => sum + s, 0) / totalResponses).toFixed(1);
         const highestScore = Math.max(...scores);
         const lowestScore = Math.min(...scores);
+
+        const totalTime = attempts.reduce((sum, a) => sum + (a.time_taken || 0), 0);
+        const averageTimeSpentSeconds = Math.round(totalTime / totalResponses);
 
         const distribution = [0, 0, 0, 0, 0];
         scores.forEach(score => {
@@ -404,6 +406,7 @@ app.get('/admin/performance-metrics', async (req, res) => {
             averageScore,
             highestScore,
             lowestScore,
+            averageTimeSpentSeconds,
             scoreDistribution: distribution,
             leaderboard
         });
@@ -412,7 +415,6 @@ app.get('/admin/performance-metrics', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
 
 app.get('/student/old-quizzes', async (req, res) => {
     const { studentId } = req.query;

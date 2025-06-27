@@ -9,6 +9,8 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
     const [loading, setLoading] = useState(true);
     const [subject, setSubject] = useState('');
     const [topic, setTopic] = useState('');
+    const [startTime, setStartTime] = useState(null); // ✅ Track start time
+
     const borderColors = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#dc3545'];
 
     useEffect(() => {
@@ -20,6 +22,7 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
                     setQuestions(data.questions);
                     setSubject(data.subject);
                     setTopic(data.topic);
+                    setStartTime(Date.now()); // ✅ Start time set after quiz loads
                 } else {
                     alert('Failed to load questions');
                 }
@@ -50,6 +53,13 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
             selectedOption
         }));
 
+        // ✅ Time tracking
+        const endTime = Date.now();
+        const totalSeconds = Math.floor((endTime - startTime) / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const time_taken = `${minutes}m ${seconds}s`;
+
         try {
             const response = await fetch('https://clarytix-backend.onrender.com/quiz/submit', {
                 method: 'POST',
@@ -57,7 +67,8 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
                 body: JSON.stringify({
                     userId,
                     topicId,
-                    answers: formattedAnswers
+                    answers: formattedAnswers,
+                    time_taken // ✅ Send to backend
                 })
             });
 
@@ -87,7 +98,6 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
                 >
                     <h4>Q{index + 1}. {q.question_text}</h4>
 
-                    {/* Display image if available */}
                     {q.image_url && (
                         <div className="question-image-wrapper">
                             <img src={q.image_url} alt="Visual related to the question" className="question-image" />

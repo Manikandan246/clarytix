@@ -10,7 +10,7 @@ function ResultPage({ results, onBackToDashboard }) {
 
     return (
         <div className="quiz-container">
-            <img src={schoolLogo} alt="School Logo" className="school-logo" />
+            <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
             <h2>Quiz Results</h2>
 
             {results.map((result, index) => {

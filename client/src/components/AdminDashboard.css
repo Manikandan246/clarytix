@@ -99,3 +99,8 @@
 .view-questions-card {
     border-left: 6px solid #6f42c1; /* Purple border for view questions */
 }
+
+.view-count-card {
+    border-left: 6px solid #20c997; 
+}
+

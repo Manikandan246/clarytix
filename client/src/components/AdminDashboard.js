@@ -283,11 +283,11 @@ useEffect(() => {
       
 
                 {/* -- Quiz Count Card -- */}
-                <div className="card vc-quiz-count-card">
+                <div className="card view-count-card">
                     <h3 className="card-title">Quiz Count</h3>
-                    <div className="vc-dropdown-row">
+                    <div className="dropdown-row">
                         <select
-                            className="vc-dropdown"
+                            className="dropdown"
                             value={selectedClass}
                             onChange={(e) => setSelectedClass(e.target.value)}
                         >
@@ -298,7 +298,7 @@ useEffect(() => {
                         </select>
 
                         <select
-                            className="vc-dropdown"
+                            className="dropdown"
                             value={selectedQuizSubject}
                             onChange={(e) => setSelectedQuizSubject(e.target.value)}
                             disabled={!selectedClass}
@@ -310,7 +310,7 @@ useEffect(() => {
                         </select>
 
                         <button
-                            className="vc-btn"
+                           className="track-btn"
                             disabled={!selectedClass || !selectedQuizSubject}
                             onClick={handleViewQuizCount}
                         >
