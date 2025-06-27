@@ -56,9 +56,8 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
         // ✅ Time tracking
         const endTime = Date.now();
         const totalSeconds = Math.floor((endTime - startTime) / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        const time_taken = `${minutes}m ${seconds}s`;
+        
+        const timeTaken = totalSeconds;
 
         try {
             const response = await fetch('https://clarytix-backend.onrender.com/quiz/submit', {
@@ -68,7 +67,7 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
                     userId,
                     topicId,
                     answers: formattedAnswers,
-                    time_taken // ✅ Send to backend
+                    timeTaken // ✅ Send to backend
                 })
             });
 

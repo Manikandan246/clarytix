@@ -80,11 +80,12 @@ function AdminPerformancePage() {
     const leaderboardScores = metrics.leaderboard.map(entry => entry.score);
 
     // New code for time formatting
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}m ${secs}s`;
-    };
+  function formatSeconds(seconds) {
+  if (!seconds || isNaN(seconds)) return '0m 0s';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+}
 
     return (
         <div className="admin-container">
@@ -105,7 +106,7 @@ function AdminPerformancePage() {
                 </div>
                 <div className="metric-card">
                     <p>Average Time Taken</p>
-                    <h3>{formatTime(metrics.averageTimeTaken)}</h3> {/* Average time in minutes and seconds */}
+                    <h3>{formatSeconds(metrics.averageTimeSpentSeconds)}</h3> {/* Average time in minutes and seconds */}
                 </div>
                 <div className="metric-card">
                     <p>Highest Score</p>
