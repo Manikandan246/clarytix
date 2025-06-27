@@ -209,7 +209,7 @@ app.post('/quiz/submit', async (req, res) => {
                 option_d: correctData.option_d
             };
         });
-
+console.log(' Inserting attempt with timeTaken:', timeTaken);
         const attemptInsert = await client.query(
             `INSERT INTO quiz_attempts (user_id, topic_id, score, attempt_number, time_taken)
              VALUES ($1, $2, $3, $4, $5)
