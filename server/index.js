@@ -1130,11 +1130,8 @@ app.get('/admin/sections', async (req, res) => {
 
 // In your routes/admin.js or wherever appropriate
 
-const express = require('express');
-const router = express.Router();
-const pool = require('../db'); // adjust path to your DB connection
 
-router.get('/section-name', async (req, res) => {
+app.get('/admin/section-name', async (req, res) => {
     const { sectionId } = req.query;
 
     if (!sectionId) {
@@ -1161,7 +1158,7 @@ router.get('/section-name', async (req, res) => {
     }
 });
 
-module.exports = router;
+
 
 
 
