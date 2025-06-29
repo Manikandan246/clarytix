@@ -117,3 +117,22 @@ input {
     gap: 5px;
 }
 
+.SuperAdminEditor-assign-section {
+    margin-top: 40px;
+    padding: 20px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+}
+
+.SuperAdminEditor-checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.SuperAdminEditor-checkbox-grid label {
+    width: 200px;
+    font-size: 14px;
+}
+

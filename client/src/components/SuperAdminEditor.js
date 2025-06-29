@@ -8,9 +8,11 @@ function SuperAdminEditor() {
     const [message, setMessage] = useState('');
 
     const [schools, setSchools] = useState([]);
-    const [selectedSchoolIds, setSelectedSchoolIds] = useState([]);
+    const [selectedSchoolId, setSelectedSchoolId] = useState('');
+    const [selectedTopicsForSchool, setSelectedTopicsForSchool] = useState([]);
     const [assignMessage, setAssignMessage] = useState('');
 
+    // Load all topics and schools initially
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
             .then(res => res.json())
@@ -25,19 +27,13 @@ function SuperAdminEditor() {
             });
     }, []);
 
+    // Load questions when a topic is selected
     useEffect(() => {
         if (selectedTopicId) {
             fetch(`https://clarytix-backend.onrender.com/superadmin/questions?topicId=${selectedTopicId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) setQuestions(data.questions);
-                });
-
-            // Optionally fetch already assigned schools for that topic
-            fetch(`https://clarytix-backend.onrender.com/superadmin/topic-schools?topicId=${selectedTopicId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) setSelectedSchoolIds(data.schoolIds);
                 });
         }
     }, [selectedTopicId]);
@@ -59,29 +55,33 @@ function SuperAdminEditor() {
         setTimeout(() => setMessage(''), 3000);
     };
 
-    const handleAssignTopics = async () => {
-        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/assign-topic-to-schools', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ topicId: selectedTopicId, schoolIds: selectedSchoolIds })
-        });
-        const data = await res.json();
-        setAssignMessage(data.success ? 'Topic assigned to schools successfully!' : 'Assignment failed.');
-        setTimeout(() => setAssignMessage(''), 3000);
+    const handleTopicCheckbox = (topicId) => {
+        setSelectedTopicsForSchool(prev =>
+            prev.includes(topicId)
+                ? prev.filter(id => id !== topicId)
+                : [...prev, topicId]
+        );
     };
 
-    const handleSchoolCheckbox = (schoolId) => {
-        setSelectedSchoolIds(prev =>
-            prev.includes(schoolId)
-                ? prev.filter(id => id !== schoolId)
-                : [...prev, schoolId]
-        );
+    const handleAssignTopicsToSchool = async () => {
+        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/assign-topics-to-school', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                schoolId: selectedSchoolId,
+                topicIds: selectedTopicsForSchool
+            })
+        });
+
+        const data = await res.json();
+        setAssignMessage(data.success ? 'Topics assigned to school successfully!' : 'Assignment failed.');
+        setTimeout(() => setAssignMessage(''), 3000);
     };
 
     return (
         <div className="SuperAdminEditor-container">
+            {/* Section 1: Question Editor */}
             <h2>SuperAdmin Question Editor</h2>
-
             <select
                 className="SuperAdminEditor-dropdown"
                 value={selectedTopicId}
@@ -128,27 +128,43 @@ function SuperAdminEditor() {
                 </div>
             )}
 
-            {selectedTopicId && (
-                <div className="SuperAdminEditor-topic-assignment">
-                    <h3>Assign Topic to Schools</h3>
-                    <div className="SuperAdminEditor-school-checkbox-list">
-                        {schools.map(s => (
-                            <label key={s.id}>
+            {/* Section 2: Topic Assignment */}
+            <div className="SuperAdminEditor-assign-section">
+                <h2>Assign Topics to School</h2>
+                <select
+                    className="SuperAdminEditor-dropdown"
+                    value={selectedSchoolId}
+                    onChange={(e) => {
+                        setSelectedSchoolId(e.target.value);
+                        setSelectedTopicsForSchool([]); // Reset
+                    }}
+                >
+                    <option value="">Select School</option>
+                    {schools.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                </select>
+
+                {selectedSchoolId && (
+                    <div className="SuperAdminEditor-checkbox-grid">
+                        {topics.map(topic => (
+                            <label key={topic.id}>
                                 <input
                                     type="checkbox"
-                                    checked={selectedSchoolIds.includes(s.id)}
-                                    onChange={() => handleSchoolCheckbox(s.id)}
+                                    checked={selectedTopicsForSchool.includes(topic.id)}
+                                    onChange={() => handleTopicCheckbox(topic.id)}
                                 />
-                                {s.name}
+                                {topic.name}
                             </label>
                         ))}
                     </div>
-                    <button className="SuperAdminEditor-update-btn" onClick={handleAssignTopics}>
-                        Assign to Selected Schools
-                    </button>
-                    {assignMessage && <div className="SuperAdminEditor-message">{assignMessage}</div>}
-                </div>
-            )}
+                )}
+
+                <button className="SuperAdminEditor-update-btn" onClick={handleAssignTopicsToSchool}>
+                    Assign Topics
+                </button>
+                {assignMessage && <div className="SuperAdminEditor-message">{assignMessage}</div>}
+            </div>
         </div>
     );
 }
