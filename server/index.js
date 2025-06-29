@@ -827,7 +827,15 @@ app.get('/admin/question-analysis', async (req, res) => {
     try {
         const client = await pool.connect();
 
-        let analysisQuery = `
+        const params = [topicId, schoolId];
+        let sectionFilter = '';
+
+        if (sectionId) {
+            sectionFilter = `AND s.section_id = $3`;
+            params.push(sectionId);
+        }
+
+        const analysisQuery = `
             SELECT 
                 q.question_text,
                 COUNT(qr.id) AS total,
@@ -850,16 +858,7 @@ app.get('/admin/question-analysis', async (req, res) => {
             INNER JOIN users u ON qa.user_id = u.id
             INNER JOIN students s ON u.id = s.user_id
             WHERE q.topic_id = $1 AND u.school_id = $2
-        `;
-
-        const params = [topicId, schoolId];
-
-        if (sectionId) {
-            analysisQuery += ` AND s.section_id = $3`;
-            params.push(sectionId);
-        }
-
-        analysisQuery += `
+            ${sectionFilter}
             GROUP BY q.id, q.question_text
             ORDER BY incorrect DESC
         `;
@@ -894,6 +893,7 @@ app.get('/admin/question-analysis', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 app.get('/superadmin/all-topics', async (req, res) => {
     try {
