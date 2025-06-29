@@ -15,6 +15,7 @@ function QuestionAnalysis() {
     // ✅ Read sectionId from URL query params
     const queryParams = new URLSearchParams(window.location.search);
     const sectionId = queryParams.get('sectionId');
+    const [sectionName, setSectionName] = useState('');
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -26,6 +27,7 @@ function QuestionAnalysis() {
                     url += `&sectionId=${sectionId}`;
                 }
 
+                console.log('Requesting analysis with URL:', url);
                 const response = await fetch(url);
                 const data = await response.json();
                 if (data.success) {
@@ -49,6 +51,24 @@ function QuestionAnalysis() {
         fetchData();
     }, [topicId, schoolId, sectionId]);
 
+    useEffect(() => {
+        const fetchSectionName = async () => {
+            if (sectionId) {
+                try {
+                    const response = await fetch(`https://clarytix-backend.onrender.com/admin/section-name?sectionId=${sectionId}`);
+                    const data = await response.json();
+                    if (data.success && data.sectionName) {
+                        setSectionName(data.sectionName);
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch section name", err);
+                }
+            }
+        };
+    
+        fetchSectionName();
+    }, [sectionId]);
+
     return (
         <div className="defaulters-wrapper">
             <div className="defaulters-container">
@@ -56,7 +76,7 @@ function QuestionAnalysis() {
                 <h2>Question Analysis</h2>
                 <p className="defaulters-subtitle">
                     {topicDetails.className}
-                    {sectionId ? ` - Section ${sectionId}` : ''}
+                    {sectionName ? ` - Section ${sectionName}` : ''}
                     {' - '}
                     {topicDetails.subject} - {topicDetails.topic}
                 </p>

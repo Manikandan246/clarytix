@@ -488,22 +488,29 @@ app.get('/admin/subjects', async (req, res) => {
 app.get('/admin/topics', async (req, res) => {
     const { schoolId, className, subjectId } = req.query;
 
+    if (!schoolId || !className || !subjectId) {
+        return res.status(400).json({ success: false, message: 'Missing parameters' });
+    }
+
     try {
-        const client = await pool.connect();
-        const result = await client.query(
-            `SELECT DISTINCT t.id, t.name
-             FROM topics t
-             JOIN school_curriculum sc ON t.subject_id = sc.subject_id AND t.class = sc.class
-             WHERE sc.school_id = $1 AND sc.class = $2 AND sc.subject_id = $3`,
+        const result = await pool.query(
+            `
+            SELECT t.*
+            FROM topics t
+            INNER JOIN school_curriculum_topics sct ON sct.topic_id = t.id
+            WHERE sct.school_id = $1 AND t.class = $2 AND t.subject_id = $3
+            ORDER BY t.name
+            `,
             [schoolId, className, subjectId]
         );
-        client.release();
+
         res.json({ success: true, topics: result.rows });
-    } catch (err) {
-        console.error('Fetch topics error:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
+    } catch (error) {
+        console.error('Error fetching topics for teacher:', error);
+        res.status(500).json({ success: false });
     }
 });
+
 
 app.get('/admin/students', async (req, res) => {
     const { schoolId, className, sectionId } = req.query;
@@ -1193,6 +1200,57 @@ app.get('/admin/section-name', async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
+
+app.get('/superadmin/all-schools', async (req, res) => {
+    const result = await pool.query('SELECT id, name FROM schools ORDER BY name');
+    res.json({ success: true, schools: result.rows });
+});
+
+
+app.post('/superadmin/assign-topic-to-schools', async (req, res) => {
+    const { topicId, schoolIds } = req.body;
+    if (!topicId || !Array.isArray(schoolIds)) {
+        return res.status(400).json({ success: false, message: 'Invalid input' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Delete existing mappings
+        await client.query('DELETE FROM school_curriculum_topics WHERE topic_id = $1', [topicId]);
+
+        // Insert new ones
+        for (const schoolId of schoolIds) {
+            await client.query(
+                'INSERT INTO school_curriculum_topics (school_id, topic_id) VALUES ($1, $2)',
+                [schoolId, topicId]
+            );
+        }
+
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error assigning topic to schools:', err);
+        res.status(500).json({ success: false });
+    } finally {
+        client.release();
+    }
+});
+
+app.get('/superadmin/topic-schools', async (req, res) => {
+    const { topicId } = req.query;
+    if (!topicId) return res.status(400).json({ success: false });
+
+    const result = await pool.query(
+        'SELECT school_id FROM school_curriculum_topics WHERE topic_id = $1',
+        [topicId]
+    );
+    const schoolIds = result.rows.map(row => row.school_id);
+    res.json({ success: true, schoolIds });
+});
+
 
 
 

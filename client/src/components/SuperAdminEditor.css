@@ -53,3 +53,67 @@ input {
     color: green;
     font-weight: 500;
 }
+
+
+.SuperAdminEditor-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.SuperAdminEditor-dropdown {
+    padding: 8px;
+    margin-bottom: 20px;
+    width: 300px;
+}
+
+.SuperAdminEditor-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.SuperAdminEditor-table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.SuperAdminEditor-table-wrapper th,
+.SuperAdminEditor-table-wrapper td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+.SuperAdminEditor-update-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: #2a7ae2;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.SuperAdminEditor-message {
+    margin-top: 10px;
+    color: green;
+}
+
+.SuperAdminEditor-topic-assignment {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.SuperAdminEditor-school-checkbox-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.SuperAdminEditor-school-checkbox-list label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+

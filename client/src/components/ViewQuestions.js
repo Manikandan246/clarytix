@@ -12,7 +12,15 @@ function ViewQuestions() {
     const [topic, setTopic] = useState('');
     const [loading, setLoading] = useState(true);
 
-    const borderColors = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#dc3545'];
+    // ✅ Read sectionId from URL query params
+    const queryParams = new URLSearchParams(window.location.search);
+    const sectionId = queryParams.get('sectionId');
+    console.log("Loaded sectionId:", sectionId);
+
+    const borderColors = [
+        '#007bff', '#28a745', '#ffc107', '#17a2b8', '#6f42c1',
+        '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#dc3545'
+    ];
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -60,9 +68,20 @@ function ViewQuestions() {
             ))}
 
             <div className="result-buttons">
-                  <button onClick={() => navigate(`/admin/question-analysis/${topicId}`)}>Question Analysis</button>
-                <button onClick={() => navigate('/admin-dashboard')}>Go to Homepage</button>
-              
+                <button
+                    onClick={() =>
+                        navigate(
+                            sectionId
+                                ? `/admin/question-analysis/${topicId}?sectionId=${sectionId}`
+                                : `/admin/question-analysis/${topicId}`
+                        )
+                    }
+                >
+                    Question Analysis
+                </button>
+                <button onClick={() => navigate('/admin-dashboard')}>
+                    Go to Homepage
+                </button>
             </div>
         </div>
     );

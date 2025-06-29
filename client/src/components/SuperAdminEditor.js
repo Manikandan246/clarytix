@@ -7,11 +7,21 @@ function SuperAdminEditor() {
     const [questions, setQuestions] = useState([]);
     const [message, setMessage] = useState('');
 
+    const [schools, setSchools] = useState([]);
+    const [selectedSchoolIds, setSelectedSchoolIds] = useState([]);
+    const [assignMessage, setAssignMessage] = useState('');
+
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
             .then(res => res.json())
             .then(data => {
                 if (data.success) setTopics(data.topics);
+            });
+
+        fetch('https://clarytix-backend.onrender.com/superadmin/all-schools')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) setSchools(data.schools);
             });
     }, []);
 
@@ -21,6 +31,13 @@ function SuperAdminEditor() {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) setQuestions(data.questions);
+                });
+
+            // Optionally fetch already assigned schools for that topic
+            fetch(`https://clarytix-backend.onrender.com/superadmin/topic-schools?topicId=${selectedTopicId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) setSelectedSchoolIds(data.schoolIds);
                 });
         }
     }, [selectedTopicId]);
@@ -38,19 +55,35 @@ function SuperAdminEditor() {
             body: JSON.stringify({ questions })
         });
         const data = await res.json();
-        if (data.success) {
-            setMessage('Questions updated successfully!');
-            setTimeout(() => setMessage(''), 3000);
-        } else {
-            setMessage('Update failed.');
-        }
+        setMessage(data.success ? 'Questions updated successfully!' : 'Update failed.');
+        setTimeout(() => setMessage(''), 3000);
+    };
+
+    const handleAssignTopics = async () => {
+        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/assign-topic-to-schools', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topicId: selectedTopicId, schoolIds: selectedSchoolIds })
+        });
+        const data = await res.json();
+        setAssignMessage(data.success ? 'Topic assigned to schools successfully!' : 'Assignment failed.');
+        setTimeout(() => setAssignMessage(''), 3000);
+    };
+
+    const handleSchoolCheckbox = (schoolId) => {
+        setSelectedSchoolIds(prev =>
+            prev.includes(schoolId)
+                ? prev.filter(id => id !== schoolId)
+                : [...prev, schoolId]
+        );
     };
 
     return (
-        <div className="superadmin-editor-container">
+        <div className="SuperAdminEditor-container">
             <h2>SuperAdmin Question Editor</h2>
+
             <select
-                className="dropdown"
+                className="SuperAdminEditor-dropdown"
                 value={selectedTopicId}
                 onChange={(e) => setSelectedTopicId(e.target.value)}
             >
@@ -61,7 +94,7 @@ function SuperAdminEditor() {
             </select>
 
             {questions.length > 0 && (
-                <div className="table-wrapper">
+                <div className="SuperAdminEditor-table-wrapper">
                     <table>
                         <thead>
                             <tr>
@@ -90,8 +123,30 @@ function SuperAdminEditor() {
                             ))}
                         </tbody>
                     </table>
-                    <button className="update-btn" onClick={handleUpdate}>Update</button>
-                    {message && <div className="message">{message}</div>}
+                    <button className="SuperAdminEditor-update-btn" onClick={handleUpdate}>Update</button>
+                    {message && <div className="SuperAdminEditor-message">{message}</div>}
+                </div>
+            )}
+
+            {selectedTopicId && (
+                <div className="SuperAdminEditor-topic-assignment">
+                    <h3>Assign Topic to Schools</h3>
+                    <div className="SuperAdminEditor-school-checkbox-list">
+                        {schools.map(s => (
+                            <label key={s.id}>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedSchoolIds.includes(s.id)}
+                                    onChange={() => handleSchoolCheckbox(s.id)}
+                                />
+                                {s.name}
+                            </label>
+                        ))}
+                    </div>
+                    <button className="SuperAdminEditor-update-btn" onClick={handleAssignTopics}>
+                        Assign to Selected Schools
+                    </button>
+                    {assignMessage && <div className="SuperAdminEditor-message">{assignMessage}</div>}
                 </div>
             )}
         </div>
