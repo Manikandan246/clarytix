@@ -831,71 +831,40 @@ app.get('/admin/question-analysis', async (req, res) => {
     try {
         const client = await pool.connect();
 
-        let analysisQuery = '';
-        let params = [];
+        const params = [topicId, schoolId];
+        let userFilterSubquery = `
+            SELECT u.id FROM users u
+            INNER JOIN students s ON u.id = s.user_id
+            WHERE u.school_id = $2
+        `;
 
         if (sectionId) {
-            // ✅ Section-specific filtering using user_id list
-            analysisQuery = `
-                SELECT 
-                    q.question_text,
-                    COUNT(qr.id) AS total,
-                    COUNT(CASE WHEN qr.is_correct THEN 1 END) AS correct,
-                    COUNT(CASE WHEN qr.is_correct = false THEN 1 END) AS incorrect
-                FROM questions q
-                LEFT JOIN quiz_attempt_responses qr ON qr.question_id = q.id
-                LEFT JOIN (
-                    SELECT qa1.*
-                    FROM quiz_attempts qa1
-                    INNER JOIN (
-                        SELECT user_id, topic_id, MIN(attempt_number) AS min_attempt
-                        FROM quiz_attempts
-                        GROUP BY user_id, topic_id
-                    ) first_attempts
-                    ON qa1.user_id = first_attempts.user_id 
-                    AND qa1.topic_id = first_attempts.topic_id 
-                    AND qa1.attempt_number = first_attempts.min_attempt
-                ) qa ON qr.attempt_id = qa.attempt_id
-                WHERE q.topic_id = $1
-                  AND qa.user_id IN (
-                      SELECT u.id
-                      FROM users u
-                      INNER JOIN students s ON u.id = s.user_id
-                      WHERE s.section_id = $2 AND u.school_id = $3
-                  )
-                GROUP BY q.id, q.question_text
-                ORDER BY incorrect DESC;
-            `;
-            params = [topicId, sectionId, schoolId];
-        } else {
-            // ✅ Class-wide fallback
-            analysisQuery = `
-                SELECT 
-                    q.question_text,
-                    COUNT(qr.id) AS total,
-                    COUNT(CASE WHEN qr.is_correct THEN 1 END) AS correct,
-                    COUNT(CASE WHEN qr.is_correct = false THEN 1 END) AS incorrect
-                FROM questions q
-                LEFT JOIN quiz_attempt_responses qr ON qr.question_id = q.id
-                LEFT JOIN (
-                    SELECT qa1.*
-                    FROM quiz_attempts qa1
-                    INNER JOIN (
-                        SELECT user_id, topic_id, MIN(attempt_number) AS min_attempt
-                        FROM quiz_attempts
-                        GROUP BY user_id, topic_id
-                    ) first_attempts
-                    ON qa1.user_id = first_attempts.user_id 
-                    AND qa1.topic_id = first_attempts.topic_id 
-                    AND qa1.attempt_number = first_attempts.min_attempt
-                ) qa ON qr.attempt_id = qa.attempt_id
-                INNER JOIN users u ON qa.user_id = u.id
-                WHERE q.topic_id = $1 AND u.school_id = $2
-                GROUP BY q.id, q.question_text
-                ORDER BY incorrect DESC;
-            `;
-            params = [topicId, schoolId];
+            params.push(sectionId);
+            userFilterSubquery += ` AND s.section_id = $3`;
         }
+
+        const analysisQuery = `
+            SELECT 
+                q.question_text,
+                COUNT(r.id) AS total,
+                COUNT(CASE WHEN r.is_correct THEN 1 END) AS correct,
+                COUNT(CASE WHEN r.is_correct = false THEN 1 END) AS incorrect
+            FROM questions q
+            LEFT JOIN quiz_attempt_responses r ON r.question_id = q.id
+            LEFT JOIN (
+                SELECT a1.*
+                FROM quiz_attempts a1
+                INNER JOIN (
+                    SELECT user_id, topic_id, MIN(attempt_number) AS min_attempt
+                    FROM quiz_attempts
+                    GROUP BY user_id, topic_id
+                ) fa ON a1.user_id = fa.user_id AND a1.topic_id = fa.topic_id AND a1.attempt_number = fa.min_attempt
+            ) a ON r.attempt_id = a.attempt_id
+            WHERE q.topic_id = $1
+              AND a.user_id IN (${userFilterSubquery})
+            GROUP BY q.id, q.question_text
+            ORDER BY incorrect DESC;
+        `;
 
         const analysisResult = await client.query(analysisQuery, params);
 
