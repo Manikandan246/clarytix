@@ -80,9 +80,11 @@ function AdminDashboard() {
         }
     }, [selectedClass, selectedSubject, selectedSectionId, schoolId]);
 
-    const handleTrackTopicWise = () => {
-        navigate(`/admin/performance/${selectedTopicId}`);
-    };
+ const handleTrackTopicWise = () => {
+    const query = new URLSearchParams({ topicId: selectedTopicId, schoolId });
+    if (selectedSectionId) query.append('sectionId', selectedSectionId);
+    navigate(`/admin/performance?${query.toString()}`);
+};
 
     // Student-wise: Load students and their subjects
     useEffect(() => {

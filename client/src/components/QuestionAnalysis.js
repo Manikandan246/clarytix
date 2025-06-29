@@ -12,12 +12,21 @@ function QuestionAnalysis() {
     const [topicDetails, setTopicDetails] = useState({});
     const [analysis, setAnalysis] = useState([]);
 
+    // ✅ Read sectionId from URL query params
+    const queryParams = new URLSearchParams(window.location.search);
+    const sectionId = queryParams.get('sectionId');
+
     useEffect(() => {
-        window.scrollTo(0, 0); // ✅ Scroll to top on load
+        window.scrollTo(0, 0);
 
         const fetchData = async () => {
             try {
-                const response = await fetch(`https://clarytix-backend.onrender.com/admin/question-analysis?topicId=${topicId}&schoolId=${schoolId}`);
+                let url = `https://clarytix-backend.onrender.com/admin/question-analysis?topicId=${topicId}&schoolId=${schoolId}`;
+                if (sectionId) {
+                    url += `&sectionId=${sectionId}`;
+                }
+
+                const response = await fetch(url);
                 const data = await response.json();
                 if (data.success) {
                     setTopicDetails({
@@ -38,7 +47,7 @@ function QuestionAnalysis() {
         };
 
         fetchData();
-    }, [topicId, schoolId]);
+    }, [topicId, schoolId, sectionId]);
 
     return (
         <div className="defaulters-wrapper">
@@ -46,13 +55,16 @@ function QuestionAnalysis() {
                 <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
                 <h2>Question Analysis</h2>
                 <p className="defaulters-subtitle">
-                    {topicDetails.className} - {topicDetails.subject} - {topicDetails.topic}
+                    {topicDetails.className}
+                    {sectionId ? ` - Section ${sectionId}` : ''}
+                    {' - '}
+                    {topicDetails.subject} - {topicDetails.topic}
                 </p>
 
                 {loading ? (
                     <p>Loading...</p>
                 ) : (
-                    <div className="table-scroll-wrapper"> {/* ✅ Added wrapper for scroll */}
+                    <div className="table-scroll-wrapper">
                         <table className="defaulters-table">
                             <thead>
                                 <tr>

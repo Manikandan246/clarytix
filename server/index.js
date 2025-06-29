@@ -822,12 +822,12 @@ app.get('/admin/assigned-topics', async (req, res) => {
 });
 
 app.get('/admin/question-analysis', async (req, res) => {
-    const { topicId, schoolId } = req.query;
+    const { topicId, schoolId, sectionId } = req.query;
 
     try {
         const client = await pool.connect();
 
-        const analysisResult = await client.query(`
+        const analysisQuery = `
             SELECT 
                 q.question_text,
                 COUNT(qr.id) AS total,
@@ -848,10 +848,18 @@ app.get('/admin/question-analysis', async (req, res) => {
                 AND qa1.attempt_number = first_attempts.min_attempt
             ) qa ON qr.attempt_id = qa.attempt_id
             LEFT JOIN users u ON qa.user_id = u.id
+            LEFT JOIN students s ON u.id = s.user_id
             WHERE q.topic_id = $1 AND u.school_id = $2
+            ${sectionId ? 'AND s.section_id = $3' : ''}
             GROUP BY q.id, q.question_text
             ORDER BY incorrect DESC
-        `, [topicId, schoolId]);
+        `;
+
+        const analysisParams = sectionId 
+            ? [topicId, schoolId, sectionId] 
+            : [topicId, schoolId];
+
+        const analysisResult = await client.query(analysisQuery, analysisParams);
 
         const metaResult = await client.query(`
             SELECT t.class AS classname, s.name AS subject, t.name AS topic
