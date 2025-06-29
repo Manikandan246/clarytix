@@ -63,20 +63,21 @@ function SuperAdminEditor() {
         );
     };
 
-    const handleAssignTopicsToSchool = async () => {
-        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/assign-topics-to-school', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                schoolId: selectedSchoolId,
-                topicIds: selectedTopicsForSchool
-            })
-        });
+ const handleAssignTopicsToSchool = async () => {
+    const res = await fetch('https://clarytix-backend.onrender.com/superadmin/assign-topics-to-school', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            schoolId: Number(selectedSchoolId),  // ✅ convert to number
+            topicIds: selectedTopicsForSchool.map(Number) // just in case
+        })
+    });
 
-        const data = await res.json();
-        setAssignMessage(data.success ? 'Topics assigned to school successfully!' : 'Assignment failed.');
-        setTimeout(() => setAssignMessage(''), 3000);
-    };
+    const data = await res.json();
+    setAssignMessage(data.success ? 'Topics assigned to school successfully!' : 'Assignment failed.');
+    setTimeout(() => setAssignMessage(''), 3000);
+};
+
 
     return (
         <div className="SuperAdminEditor-container">

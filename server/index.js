@@ -1207,35 +1207,39 @@ app.get('/superadmin/all-schools', async (req, res) => {
 });
 
 
-app.post('/superadmin/assign-topic-to-schools', async (req, res) => {
-    const { topicId, schoolIds } = req.body;
-    if (!topicId || !Array.isArray(schoolIds)) {
-        return res.status(400).json({ success: false, message: 'Invalid input' });
+app.post('/superadmin/assign-topics-to-school', async (req, res) => {
+    const { schoolId, topicIds } = req.body;
+
+    if (!schoolId || !Array.isArray(topicIds)) {
+        return res.status(400).json({ success: false, message: 'Invalid request body' });
     }
 
-    const client = await pool.connect();
     try {
-        await client.query('BEGIN');
+        const client = await pool.connect();
+        let insertedCount = 0;
 
-        // Delete existing mappings
-        await client.query('DELETE FROM school_curriculum_topics WHERE topic_id = $1', [topicId]);
-
-        // Insert new ones
-        for (const schoolId of schoolIds) {
-            await client.query(
-                'INSERT INTO school_curriculum_topics (school_id, topic_id) VALUES ($1, $2)',
+        for (const topicId of topicIds) {
+            const result = await client.query(
+                `
+                INSERT INTO school_curriculum_topics (school_id, topic_id)
+                VALUES ($1, $2)
+                ON CONFLICT (school_id, topic_id) DO NOTHING
+                `,
                 [schoolId, topicId]
             );
+            // result.rowCount will be 1 if inserted, 0 if already existed
+            insertedCount += result.rowCount;
         }
 
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        console.error('Error assigning topic to schools:', err);
-        res.status(500).json({ success: false });
-    } finally {
         client.release();
+        console.log(`✅ Assigned ${insertedCount} topic(s) to school ${schoolId}`);
+        return res.json({
+            success: true,
+            message: `Assigned ${insertedCount} new topic(s) to the school.`
+        });
+    } catch (err) {
+        console.error('❌ Error assigning topics to school:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
