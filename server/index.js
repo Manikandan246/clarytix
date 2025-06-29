@@ -831,18 +831,53 @@ app.get('/admin/question-analysis', async (req, res) => {
     try {
         const client = await pool.connect();
 
-        const params = [topicId, schoolId];
-        let userFilterSubquery = `
-            SELECT u.id FROM users u
+        // STEP 1: Get valid user_ids for the section
+        const userQuery = `
+            SELECT u.id AS user_id
+            FROM users u
             INNER JOIN students s ON u.id = s.user_id
-            WHERE u.school_id = $2
+            WHERE u.school_id = $1
+            ${sectionId ? 'AND s.section_id = $2' : ''}
         `;
+        const userParams = sectionId ? [schoolId, sectionId] : [schoolId];
+        const userResult = await client.query(userQuery, userParams);
+        const validUserIds = userResult.rows.map(row => row.user_id);
 
-        if (sectionId) {
-            params.push(sectionId);
-            userFilterSubquery += ` AND s.section_id = $3`;
+        if (validUserIds.length === 0) {
+            return res.json({
+                success: true,
+                analysis: [],
+                classname: '',
+                subject: '',
+                topic: ''
+            });
         }
 
+        // STEP 2: Get first attempts only from those users
+        const firstAttemptsQuery = `
+            SELECT a.*
+            FROM quiz_attempts a
+            INNER JOIN (
+                SELECT user_id, topic_id, MIN(attempt_number) AS min_attempt
+                FROM quiz_attempts
+                WHERE topic_id = $1 AND user_id = ANY($2::int[])
+                GROUP BY user_id, topic_id
+            ) fa ON a.user_id = fa.user_id AND a.topic_id = fa.topic_id AND a.attempt_number = fa.min_attempt
+        `;
+        const firstAttempts = await client.query(firstAttemptsQuery, [topicId, validUserIds]);
+        const validAttemptIds = firstAttempts.rows.map(row => row.attempt_id);
+
+        if (validAttemptIds.length === 0) {
+            return res.json({
+                success: true,
+                analysis: [],
+                classname: '',
+                subject: '',
+                topic: ''
+            });
+        }
+
+        // STEP 3: Final analysis query
         const analysisQuery = `
             SELECT 
                 q.question_text,
@@ -851,23 +886,15 @@ app.get('/admin/question-analysis', async (req, res) => {
                 COUNT(CASE WHEN r.is_correct = false THEN 1 END) AS incorrect
             FROM questions q
             LEFT JOIN quiz_attempt_responses r ON r.question_id = q.id
-            LEFT JOIN (
-                SELECT a1.*
-                FROM quiz_attempts a1
-                INNER JOIN (
-                    SELECT user_id, topic_id, MIN(attempt_number) AS min_attempt
-                    FROM quiz_attempts
-                    GROUP BY user_id, topic_id
-                ) fa ON a1.user_id = fa.user_id AND a1.topic_id = fa.topic_id AND a1.attempt_number = fa.min_attempt
-            ) a ON r.attempt_id = a.attempt_id
             WHERE q.topic_id = $1
-              AND a.user_id IN (${userFilterSubquery})
+              AND r.attempt_id = ANY($2::int[])
             GROUP BY q.id, q.question_text
-            ORDER BY incorrect DESC;
+            ORDER BY incorrect DESC
         `;
 
-        const analysisResult = await client.query(analysisQuery, params);
+        const analysisResult = await client.query(analysisQuery, [topicId, validAttemptIds]);
 
+        // STEP 4: Topic metadata
         const metaResult = await client.query(`
             SELECT t.class AS classname, s.name AS subject, t.name AS topic
             FROM topics t
@@ -883,7 +910,7 @@ app.get('/admin/question-analysis', async (req, res) => {
 
         const { classname, subject, topic } = metaResult.rows[0];
 
-        res.json({
+        return res.json({
             success: true,
             analysis: analysisResult.rows,
             classname,
@@ -892,10 +919,11 @@ app.get('/admin/question-analysis', async (req, res) => {
         });
 
     } catch (err) {
-        console.error('Question analysis error:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
+        console.error('Question analysis final fallback error:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 
 app.get('/superadmin/all-topics', async (req, res) => {
