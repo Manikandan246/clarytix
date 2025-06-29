@@ -1128,6 +1128,41 @@ app.get('/admin/sections', async (req, res) => {
     }
 });
 
+// In your routes/admin.js or wherever appropriate
+
+const express = require('express');
+const router = express.Router();
+const pool = require('../db'); // adjust path to your DB connection
+
+router.get('/section-name', async (req, res) => {
+    const { sectionId } = req.query;
+
+    if (!sectionId) {
+        return res.status(400).json({ success: false, message: 'Missing sectionId' });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT section_name FROM sections WHERE id = $1',
+            [sectionId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Section not found' });
+        }
+
+        return res.json({
+            success: true,
+            sectionName: result.rows[0].section_name
+        });
+    } catch (error) {
+        console.error('Error fetching section name:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+module.exports = router;
+
 
 
 

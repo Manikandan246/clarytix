@@ -15,6 +15,8 @@ function QuizCountPage() {
     const [subjectName, setSubjectName] = useState('');
 
     const schoolId = localStorage.getItem('schoolId');
+    const [sectionName, setSectionName] = useState('');
+
 
     useEffect(() => {
         setSchoolLogo(localStorage.getItem('schoolLogoUrl') || '');
@@ -42,12 +44,31 @@ function QuizCountPage() {
             .catch(() => alert('Error connecting to server'));
     }, [className, subjectId, schoolId, sectionId]);
 
+    useEffect(() => {
+    const fetchSectionName = async () => {
+        if (sectionId) {
+            try {
+                const response = await fetch(`https://clarytix-backend.onrender.com/admin/section-name?sectionId=${sectionId}`);
+                const data = await response.json();
+                if (data.success && data.sectionName) {
+                    setSectionName(data.sectionName);
+                }
+            } catch (err) {
+                console.error("Failed to fetch section name", err);
+            }
+        }
+    };
+
+    fetchSectionName();
+}, [sectionId]);
+
+
     return (
         <div className="vc-container">
             <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
             <h2>
                 {className}
-                {sectionId ? ` - Section ${sectionId}` : ''}
+                {sectionName ? ` - Section ${sectionName}` : ''}
                 {' - '}
                 {subjectName}
             </h2>

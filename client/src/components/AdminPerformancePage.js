@@ -35,6 +35,8 @@ function AdminPerformancePage() {
     // Read sectionId from query params
     const queryParams = new URLSearchParams(window.location.search);
     const sectionId = queryParams.get('sectionId');
+    const [sectionName, setSectionName] = useState('');
+
 
     useEffect(() => {
         const fetchMetrics = async () => {
@@ -71,6 +73,25 @@ function AdminPerformancePage() {
         fetchMetrics();
     }, [topicId, schoolId, sectionId]);
 
+    useEffect(() => {
+    const fetchSectionName = async () => {
+        if (sectionId) {
+            try {
+                const response = await fetch(`https://clarytix-backend.onrender.com/admin/section-name?sectionId=${sectionId}`);
+                const data = await response.json();
+                if (data.success && data.sectionName) {
+                    setSectionName(data.sectionName);
+                }
+            } catch (err) {
+                console.error("Failed to fetch section name", err);
+            }
+        }
+    };
+
+    fetchSectionName();
+}, [sectionId]);
+
+
     if (!metrics) {
         return <div>Loading metrics...</div>;
     }
@@ -95,7 +116,7 @@ function AdminPerformancePage() {
                 <h2>Performance Metrics</h2>
                 <p>
                     {topicInfo.className}
-                    {sectionId ? ` - Section ${sectionId}` : ''}
+                    {sectionName ? ` - Section ${sectionName}` : ''}
                     {' - '}
                     {topicInfo.subject} - {topicInfo.topic}
                 </p>

@@ -12,6 +12,7 @@ function ClassDetailsPage() {
 
     const queryParams = new URLSearchParams(window.location.search);
     const sectionId = queryParams.get('sectionId');
+    const [sectionName, setSectionName] = useState('');
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -37,6 +38,26 @@ function ClassDetailsPage() {
         fetchDetails();
     }, [topicId, schoolId, sectionId]);
 
+
+    useEffect(() => {
+    const fetchSectionName = async () => {
+        if (sectionId) {
+            try {
+                const response = await fetch(`https://clarytix-backend.onrender.com/admin/section-name?sectionId=${sectionId}`);
+                const data = await response.json();
+                if (data.success && data.sectionName) {
+                    setSectionName(data.sectionName);
+                }
+            } catch (err) {
+                console.error("Failed to fetch section name", err);
+            }
+        }
+    };
+
+    fetchSectionName();
+}, [sectionId]);
+
+
     function formatSeconds(seconds) {
         if (!seconds || isNaN(seconds)) return '0m 0s';
         const mins = Math.floor(seconds / 60);
@@ -51,7 +72,7 @@ function ClassDetailsPage() {
                 <h2>Class Performance Details</h2>
                 <p>
                     {meta.className}
-                    {sectionId ? ` - Section ${sectionId}` : ''}
+                    {sectionName ? ` - Section ${sectionName}` : ''}
                     {' - '}
                     {meta.subject} - {meta.topic}
                 </p>

@@ -66,7 +66,7 @@ function AdminDashboard() {
         }
     }, [selectedClass, schoolId]);
 
-    // Assigned topics - section aware
+    // Assigned topics
     useEffect(() => {
         if (selectedClass && selectedSubject) {
             let url = `https://clarytix-backend.onrender.com/admin/assigned-topics?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`;
@@ -80,13 +80,13 @@ function AdminDashboard() {
         }
     }, [selectedClass, selectedSubject, selectedSectionId, schoolId]);
 
- const handleTrackTopicWise = () => {
-    const query = new URLSearchParams({ topicId: selectedTopicId, schoolId });
-    if (selectedSectionId) query.append('sectionId', selectedSectionId);
-    navigate(`/admin/performance?${query.toString()}`);
+    const handleTrackTopicWise = () => {
+    const sectionPart = selectedSectionId ? `?sectionId=${selectedSectionId}` : '';
+    navigate(`/admin/performance/${selectedTopicId}${sectionPart}`);
 };
 
-    // Student-wise: Load students and their subjects
+
+    // Student-wise
     useEffect(() => {
         if (selectedClass && selectedSectionId) {
             fetch(`https://clarytix-backend.onrender.com/admin/students?schoolId=${schoolId}&className=${selectedClass}&sectionId=${selectedSectionId}`)
@@ -146,7 +146,7 @@ function AdminDashboard() {
         navigate(`/admin/view-questions/${selectedViewTopicId}`);
     };
 
-    // Quiz Count subjects
+    // Quiz Count
     useEffect(() => {
         if (selectedClass) {
             fetch(`https://clarytix-backend.onrender.com/admin/subjects?schoolId=${schoolId}&className=${selectedClass}`)
@@ -156,7 +156,7 @@ function AdminDashboard() {
                     setSelectedQuizSubject('');
                 });
         }
-    }, [selectedClass, schoolId]);
+    }, [selectedClass,schoolId]);
 
     const handleViewQuizCount = () => {
         const query = new URLSearchParams({
@@ -182,7 +182,6 @@ function AdminDashboard() {
                                 <option key={i + 5} value={`Class ${i + 5}`}>Class {i + 5}</option>
                             ))}
                         </select>
-
                         {sections.length > 0 && (
                             <select className="dropdown" value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)}>
                                 <option value="">Section</option>
@@ -191,21 +190,18 @@ function AdminDashboard() {
                                 ))}
                             </select>
                         )}
-
-                        <select className="dropdown" value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} disabled={!selectedClass}>
+                        <select className="dropdown" value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
                             <option value="">Subject</option>
-                            {subjects.map(subject => (
-                                <option key={subject.id} value={subject.id}>{subject.name}</option>
+                            {subjects.map(sub => (
+                                <option key={sub.id} value={sub.id}>{sub.name}</option>
                             ))}
                         </select>
-
-                        <select className="dropdown" value={selectedTopicId} onChange={(e) => setSelectedTopicId(e.target.value)} disabled={!selectedSubject}>
+                        <select className="dropdown" value={selectedTopicId} onChange={(e) => setSelectedTopicId(e.target.value)}>
                             <option value="">Topic</option>
                             {topics.map(topic => (
                                 <option key={topic.id} value={topic.id}>{topic.name}</option>
                             ))}
                         </select>
-
                         <button className="track-btn" disabled={!selectedClass || !selectedSubject || !selectedTopicId} onClick={handleTrackTopicWise}>
                             Track Performance
                         </button>
@@ -222,7 +218,6 @@ function AdminDashboard() {
                                 <option key={i + 5} value={`Class ${i + 5}`}>Class {i + 5}</option>
                             ))}
                         </select>
-
                         {sections.length > 0 && (
                             <select className="dropdown" value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)}>
                                 <option value="">Section</option>
@@ -231,21 +226,18 @@ function AdminDashboard() {
                                 ))}
                             </select>
                         )}
-
-                        <select className="dropdown" value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)} disabled={!selectedSectionId}>
+                        <select className="dropdown" value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)}>
                             <option value="">Student</option>
                             {students.map(student => (
                                 <option key={student.id} value={student.id}>{student.username}</option>
                             ))}
                         </select>
-
-                        <select className="dropdown" value={selectedStudentSubject} onChange={(e) => setSelectedStudentSubject(e.target.value)} disabled={!selectedStudent}>
+                        <select className="dropdown" value={selectedStudentSubject} onChange={(e) => setSelectedStudentSubject(e.target.value)}>
                             <option value="">Subject</option>
                             {studentSubjects.map(sub => (
                                 <option key={sub.id} value={sub.id}>{sub.name}</option>
                             ))}
                         </select>
-
                         <button className="track-btn" disabled={!selectedStudent || !selectedStudentSubject} onClick={handleTrackStudentWise}>
                             Track Performance
                         </button>
@@ -262,7 +254,6 @@ function AdminDashboard() {
                                 <option key={i + 5} value={`Class ${i + 5}`}>Class {i + 5}</option>
                             ))}
                         </select>
-
                         {sections.length > 0 && (
                             <select className="dropdown" value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)}>
                                 <option value="">Section</option>
@@ -271,21 +262,18 @@ function AdminDashboard() {
                                 ))}
                             </select>
                         )}
-
-                        <select className="dropdown" value={selectedViewSubject} onChange={(e) => setSelectedViewSubject(e.target.value)} disabled={!selectedClass}>
+                        <select className="dropdown" value={selectedViewSubject} onChange={(e) => setSelectedViewSubject(e.target.value)}>
                             <option value="">Subject</option>
                             {viewSubjects.map(sub => (
                                 <option key={sub.id} value={sub.id}>{sub.name}</option>
                             ))}
                         </select>
-
-                        <select className="dropdown" value={selectedViewTopicId} onChange={(e) => setSelectedViewTopicId(e.target.value)} disabled={!selectedViewSubject}>
+                        <select className="dropdown" value={selectedViewTopicId} onChange={(e) => setSelectedViewTopicId(e.target.value)}>
                             <option value="">Topic</option>
                             {viewTopics.map(topic => (
                                 <option key={topic.id} value={topic.id}>{topic.name}</option>
                             ))}
                         </select>
-
                         <button className="track-btn" disabled={!selectedViewTopicId} onClick={handleViewQuestions}>
                             View Questions
                         </button>
@@ -302,7 +290,6 @@ function AdminDashboard() {
                                 <option key={i + 5} value={`Class ${i + 5}`}>Class {i + 5}</option>
                             ))}
                         </select>
-
                         {sections.length > 0 && (
                             <select className="dropdown" value={countSectionId} onChange={(e) => setCountSectionId(e.target.value)}>
                                 <option value="">Section</option>
@@ -311,14 +298,12 @@ function AdminDashboard() {
                                 ))}
                             </select>
                         )}
-
-                        <select className="dropdown" value={selectedQuizSubject} onChange={(e) => setSelectedQuizSubject(e.target.value)} disabled={!selectedClass}>
+                        <select className="dropdown" value={selectedQuizSubject} onChange={(e) => setSelectedQuizSubject(e.target.value)}>
                             <option value="">Subject</option>
-                            {quizSubjects.map(subject => (
-                                <option key={subject.id} value={subject.id}>{subject.name}</option>
+                            {quizSubjects.map(sub => (
+                                <option key={sub.id} value={sub.id}>{sub.name}</option>
                             ))}
                         </select>
-
                         <button className="track-btn" disabled={!selectedClass || !selectedQuizSubject} onClick={handleViewQuizCount}>
                             View Count
                         </button>

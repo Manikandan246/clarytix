@@ -13,6 +13,8 @@ function DefaultersPage() {
 
     const queryParams = new URLSearchParams(window.location.search);
     const sectionId = queryParams.get('sectionId');
+    const [sectionName, setSectionName] = useState('');
+
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -46,6 +48,26 @@ function DefaultersPage() {
         fetchDefaulters();
     }, [topicId, schoolId, sectionId]);
 
+
+    useEffect(() => {
+    const fetchSectionName = async () => {
+        if (sectionId) {
+            try {
+                const response = await fetch(`https://clarytix-backend.onrender.com/admin/section-name?sectionId=${sectionId}`);
+                const data = await response.json();
+                if (data.success && data.sectionName) {
+                    setSectionName(data.sectionName);
+                }
+            } catch (err) {
+                console.error("Failed to fetch section name", err);
+            }
+        }
+    };
+
+    fetchSectionName();
+}, [sectionId]);
+
+
     return (
         <div className="defaulters-wrapper">
             <div className="defaulters-container">
@@ -53,7 +75,7 @@ function DefaultersPage() {
                 <h2>Students Yet to Attempt</h2>
                 <p className="defaulters-subtitle">
                     {topicDetails.className}
-                    {sectionId ? ` - Section ${sectionId}` : ''}
+                    {sectionName ? ` - Section ${sectionName}` : ''}
                     {' - '}
                     {topicDetails.subject} - {topicDetails.topic}
                 </p>
