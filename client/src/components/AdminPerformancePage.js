@@ -29,27 +29,28 @@ function AdminPerformancePage() {
     const [topicInfo, setTopicInfo] = useState({});
     const schoolLogo = localStorage.getItem('schoolLogoUrl');
 
-    // NEW: Check raw schoolId from localStorage
     const rawSchoolId = localStorage.getItem('schoolId');
-    console.log('Raw schoolId from localStorage:', rawSchoolId);
-
     const schoolId = Number(rawSchoolId);
-    console.log('Final schoolId being sent:', schoolId);
+
+    // Read sectionId from query params
+    const queryParams = new URLSearchParams(window.location.search);
+    const sectionId = queryParams.get('sectionId');
 
     useEffect(() => {
         const fetchMetrics = async () => {
-            if (!rawSchoolId) {
-                console.error('❌ No schoolId found in localStorage! Cannot fetch metrics.');
+            if (!schoolId) {
                 alert('Error: No school ID found. Please log in again.');
                 return;
             }
 
             try {
-                console.log('✅ Sending topicId:', topicId, 'schoolId:', schoolId);
+                let url = `https://clarytix-backend.onrender.com/admin/performance-metrics?topicId=${topicId}&schoolId=${schoolId}`;
+                if (sectionId) {
+                    url += `&sectionId=${sectionId}`;
+                }
 
-                const response = await fetch(`https://clarytix-backend.onrender.com/admin/performance-metrics?topicId=${topicId}&schoolId=${schoolId}`);
+                const response = await fetch(url);
                 const data = await response.json();
-                console.log('✅ Received metrics response:', data);
 
                 if (data.success) {
                     setMetrics(data);
@@ -62,12 +63,13 @@ function AdminPerformancePage() {
                     alert('Failed to load performance metrics');
                 }
             } catch (error) {
-                console.error('❌ Error fetching performance metrics', error);
+                console.error('Error fetching performance metrics', error);
                 alert('Error connecting to server');
             }
         };
+
         fetchMetrics();
-    }, [topicId, rawSchoolId, schoolId]);
+    }, [topicId, schoolId, sectionId]);
 
     if (!metrics) {
         return <div>Loading metrics...</div>;
@@ -79,20 +81,24 @@ function AdminPerformancePage() {
     const leaderboardNames = metrics.leaderboard.map(entry => entry.studentName);
     const leaderboardScores = metrics.leaderboard.map(entry => entry.score);
 
-    // New code for time formatting
-  function formatSeconds(seconds) {
-  if (!seconds || isNaN(seconds)) return '0m 0s';
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}m ${secs}s`;
-}
+    function formatSeconds(seconds) {
+        if (!seconds || isNaN(seconds)) return '0m 0s';
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}m ${secs}s`;
+    }
 
     return (
         <div className="admin-container">
             <div className="header-container">
                 <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
                 <h2>Performance Metrics</h2>
-                <p>{topicInfo.className} - {topicInfo.subject} - {topicInfo.topic}</p>
+                <p>
+                    {topicInfo.className}
+                    {sectionId ? ` - Section ${sectionId}` : ''}
+                    {' - '}
+                    {topicInfo.subject} - {topicInfo.topic}
+                </p>
             </div>
 
             <div className="metrics-container">
@@ -106,7 +112,7 @@ function AdminPerformancePage() {
                 </div>
                 <div className="metric-card">
                     <p>Average Time Taken</p>
-                    <h3>{formatSeconds(metrics.averageTimeSpentSeconds)}</h3> {/* Average time in minutes and seconds */}
+                    <h3>{formatSeconds(metrics.averageTimeSpentSeconds)}</h3>
                 </div>
                 <div className="metric-card">
                     <p>Highest Score</p>
@@ -155,8 +161,12 @@ function AdminPerformancePage() {
             </div>
 
             <div className="back-button-container">
-                <button onClick={() => navigate(`/admin/defaulters/${topicId}`)}>Unattempted List</button>
-                <button onClick={() => navigate(`/admin/class-details/${topicId}`)}>Class Details</button>
+                <button onClick={() => navigate(`/admin/defaulters/${topicId}${sectionId ? `?sectionId=${sectionId}` : ''}`)}>
+                    Unattempted List
+                </button>
+                <button onClick={() => navigate(`/admin/class-details/${topicId}${sectionId ? `?sectionId=${sectionId}` : ''}`)}>
+                    Class Details
+                </button>
                 <button onClick={() => navigate('/admin-dashboard')}>Back to Homepage</button>
             </div>
         </div>

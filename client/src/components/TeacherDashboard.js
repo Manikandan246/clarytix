@@ -8,6 +8,8 @@ function TeacherDashboard() {
     const teacherId = localStorage.getItem('userId');
 
     const [selectedClass, setSelectedClass] = useState('');
+    const [sections, setSections] = useState([]);
+    const [selectedSectionId, setSelectedSectionId] = useState('');
     const [subjects, setSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState('');
     const [topics, setTopics] = useState([]);
@@ -17,6 +19,15 @@ function TeacherDashboard() {
 
     useEffect(() => {
         if (selectedClass) {
+            // Fetch sections for class
+            fetch(`https://clarytix-backend.onrender.com/admin/sections?schoolId=${schoolId}&className=${selectedClass}`)
+                .then(res => res.json())
+                .then(data => {
+                    setSections(data.success ? data.sections : []);
+                    setSelectedSectionId('');
+                });
+
+            // Fetch subjects for class
             fetch(`https://clarytix-backend.onrender.com/admin/subjects?schoolId=${schoolId}&className=${selectedClass}`)
                 .then(res => res.json())
                 .then(data => {
@@ -25,6 +36,14 @@ function TeacherDashboard() {
                     setTopics([]);
                     setSelectedTopicId('');
                 });
+        } else {
+            // Reset if no class is selected
+            setSections([]);
+            setSubjects([]);
+            setTopics([]);
+            setSelectedSectionId('');
+            setSelectedSubject('');
+            setSelectedTopicId('');
         }
     }, [selectedClass, schoolId]);
 
@@ -36,11 +55,15 @@ function TeacherDashboard() {
                     setTopics(data.success ? data.topics : []);
                     setSelectedTopicId('');
                 });
+        } else {
+            setTopics([]);
+            setSelectedTopicId('');
         }
     }, [selectedClass, selectedSubject, schoolId]);
 
     const clearForm = () => {
         setSelectedClass('');
+        setSelectedSectionId('');
         setSelectedSubject('');
         setTopics([]);
         setSelectedTopicId('');
@@ -61,24 +84,25 @@ function TeacherDashboard() {
                 className: selectedClass,
                 subjectId: selectedSubject,
                 topicId: selectedTopicId,
-                teacherId
+                teacherId,
+                sectionId: selectedSectionId || null
             })
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showMessage('Quiz sent successfully!', 'green');
-            } else if (data.message === 'Quiz already assigned.') {
-                showMessage('Quiz has already been sent.', 'red');
-            } else {
-                showMessage('Failed to send quiz. Try again.', 'red');
-            }
-            clearForm(); // Always clear fields after any response
-        })
-        .catch(() => {
-            showMessage('Server error. Try again.', 'red');
-            clearForm(); // Clear fields even on error
-        });
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Quiz sent successfully!', 'green');
+                } else if (data.message === 'Quiz already assigned.') {
+                    showMessage('Quiz has already been sent.', 'red');
+                } else {
+                    showMessage('Failed to send quiz. Try again.', 'red');
+                }
+                clearForm();
+            })
+            .catch(() => {
+                showMessage('Server error. Try again.', 'red');
+                clearForm();
+            });
     };
 
     return (
@@ -95,6 +119,15 @@ function TeacherDashboard() {
                                 <option key={i + 5} value={`Class ${i + 5}`}>Class {i + 5}</option>
                             ))}
                         </select>
+
+                        {sections.length > 0 && (
+                            <select className="dropdown" value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)}>
+                                <option value="">Section</option>
+                                {sections.map(section => (
+                                    <option key={section.id} value={section.id}>{section.section_name}</option>
+                                ))}
+                            </select>
+                        )}
 
                         <select className="dropdown" value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} disabled={!selectedClass}>
                             <option value="">Subject</option>

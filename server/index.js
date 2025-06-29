@@ -246,9 +246,9 @@ app.get('/student/quizzes', async (req, res) => {
     try {
         const client = await pool.connect();
 
-        // 1. Get student class and school
+        // Step 1: Get student class, section, and school
         const studentResult = await client.query(
-            `SELECT s.class, u.school_id
+            `SELECT s.class, s.section_id, u.school_id
              FROM students s
              JOIN users u ON s.user_id = u.id
              WHERE s.user_id = $1`,
@@ -261,11 +261,10 @@ app.get('/student/quizzes', async (req, res) => {
             return res.json({ success: true, availableQuizzes: [] });
         }
 
-        const { class: studentClass, school_id: schoolId } = studentResult.rows[0];
-        console.log(`Student ${studentId} is in class: ${studentClass}, school: ${schoolId}`);
+        const { class: studentClass, section_id: sectionId, school_id: schoolId } = studentResult.rows[0];
+        console.log(`Student ${studentId} is in class: ${studentClass}, section: ${sectionId}, school: ${schoolId}`);
 
-        // 2. Fetch quizzes that were assigned by a teacher from the student's school
-        // and not yet attempted by the student
+        // Step 2: Fetch quizzes assigned to the student's class and section or to the whole class
         const quizResult = await client.query(
             `SELECT DISTINCT t.id AS topic_id, s.name AS subject, t.name AS topic
              FROM quiz_assignments qa
@@ -273,11 +272,12 @@ app.get('/student/quizzes', async (req, res) => {
              JOIN subjects s ON qa.subject_id = s.id
              WHERE qa.class = $1
                AND qa.school_id = $2
+               AND (qa.section_id = $3 OR qa.section_id IS NULL)
                AND NOT EXISTS (
                    SELECT 1 FROM quiz_attempts a
-                   WHERE a.user_id = $3 AND a.topic_id = qa.topic_id
+                   WHERE a.user_id = $4 AND a.topic_id = qa.topic_id
                )`,
-            [studentClass, schoolId, studentId]
+            [studentClass, schoolId, sectionId, studentId]
         );
 
         client.release();
@@ -288,6 +288,7 @@ app.get('/student/quizzes', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 app.get('/admin/quizzes', async (req, res) => {
     const { schoolId } = req.query;
@@ -313,10 +314,11 @@ app.get('/admin/quizzes', async (req, res) => {
 });
 
 app.get('/admin/performance-metrics', async (req, res) => {
-    let { topicId, schoolId } = req.query;
+    let { topicId, schoolId, sectionId } = req.query;
 
     topicId = parseInt(topicId);
     schoolId = parseInt(schoolId);
+    sectionId = sectionId ? parseInt(sectionId) : null;
 
     if (isNaN(topicId) || isNaN(schoolId)) {
         return res.status(400).json({ success: false, message: 'Invalid topicId or schoolId' });
@@ -342,13 +344,31 @@ app.get('/admin/performance-metrics', async (req, res) => {
 
         const { topic, subject, class: className } = topicInfoResult.rows[0];
 
-        const result = await client.query(
-            `SELECT qa.user_id, u.username, qa.score, qa.time_taken
-             FROM quiz_attempts qa
-             JOIN users u ON qa.user_id = u.id
-             WHERE qa.topic_id = $1 AND qa.attempt_number = 1 AND u.school_id = $2`,
-            [topicId, schoolId]
-        );
+        // Fetch quiz attempts (optionally filtered by section)
+        let result;
+        if (sectionId) {
+            result = await client.query(
+                `SELECT qa.user_id, u.username, qa.score, qa.time_taken
+                 FROM quiz_attempts qa
+                 JOIN users u ON qa.user_id = u.id
+                 JOIN students s ON s.user_id = u.id
+                 WHERE qa.topic_id = $1 
+                   AND qa.attempt_number = 1 
+                   AND u.school_id = $2
+                   AND s.section_id = $3`,
+                [topicId, schoolId, sectionId]
+            );
+        } else {
+            result = await client.query(
+                `SELECT qa.user_id, u.username, qa.score, qa.time_taken
+                 FROM quiz_attempts qa
+                 JOIN users u ON qa.user_id = u.id
+                 WHERE qa.topic_id = $1 
+                   AND qa.attempt_number = 1 
+                   AND u.school_id = $2`,
+                [topicId, schoolId]
+            );
+        }
 
         const attempts = result.rows;
 
@@ -486,18 +506,40 @@ app.get('/admin/topics', async (req, res) => {
 });
 
 app.get('/admin/students', async (req, res) => {
-    const { schoolId, className } = req.query;
+    const { schoolId, className, sectionId } = req.query;
 
     try {
         const client = await pool.connect();
-        const result = await client.query(
-            `SELECT u.id, u.username 
-             FROM users u
-             JOIN students s ON u.id = s.user_id
-             WHERE u.school_id = $1 AND s.class = $2 AND u.role = 'student'
-             ORDER BY u.username`,
-            [schoolId, className]
-        );
+
+        let result;
+
+        if (sectionId) {
+            // If sectionId is provided, filter by section
+            result = await client.query(
+                `SELECT u.id, u.username 
+                 FROM users u
+                 JOIN students s ON u.id = s.user_id
+                 WHERE u.school_id = $1 
+                   AND s.class = $2 
+                   AND s.section_id = $3
+                   AND u.role = 'student'
+                 ORDER BY u.username`,
+                [schoolId, className, sectionId]
+            );
+        } else {
+            // No sectionId → get all students in class
+            result = await client.query(
+                `SELECT u.id, u.username 
+                 FROM users u
+                 JOIN students s ON u.id = s.user_id
+                 WHERE u.school_id = $1 
+                   AND s.class = $2 
+                   AND u.role = 'student'
+                 ORDER BY u.username`,
+                [schoolId, className]
+            );
+        }
+
         client.release();
         res.json({ success: true, students: result.rows });
 
@@ -543,48 +585,49 @@ app.get('/admin/student-performance', async (req, res) => {
         const client = await pool.connect();
 
         const result = await client.query(`
-        SELECT 
-    t.name AS topic, 
-    qa.score,
-    ROUND((
-        SELECT AVG(qa2.score)::numeric(10,1)
-        FROM quiz_attempts qa2
-        JOIN users u2 ON qa2.user_id = u2.id
-        WHERE qa2.attempt_number = 1
-          AND qa2.topic_id = qa.topic_id
-          AND u2.school_id = u.school_id
-          AND qa2.user_id IN (
-              SELECT s.user_id FROM students s WHERE s.class = stu.class
-          )
-    ), 1) AS class_avg,
-    (
-        SELECT MAX(qa3.score)
-        FROM quiz_attempts qa3
-        JOIN users u3 ON qa3.user_id = u3.id
-        WHERE qa3.attempt_number = 1
-          AND qa3.topic_id = qa.topic_id
-          AND u3.school_id = u.school_id
-          AND qa3.user_id IN (
-              SELECT s.user_id FROM students s WHERE s.class = stu.class
-          )
-    ) AS highest_score
-FROM quiz_attempts qa
-JOIN topics t ON qa.topic_id = t.id
-JOIN users u ON qa.user_id = u.id
-JOIN students stu ON u.id = stu.user_id
-WHERE qa.user_id = $1
-  AND t.subject_id = $2
-  AND qa.attempt_number = 1;
-
+            SELECT 
+                t.name AS topic, 
+                qa.score,
+                ROUND((
+                    SELECT AVG(qa2.score)::numeric(10,1)
+                    FROM quiz_attempts qa2
+                    JOIN users u2 ON qa2.user_id = u2.id
+                    JOIN students s2 ON u2.id = s2.user_id
+                    WHERE qa2.attempt_number = 1
+                      AND qa2.topic_id = qa.topic_id
+                      AND u2.school_id = u.school_id
+                      AND s2.class = stu.class
+                      AND s2.section_id = stu.section_id
+                ), 1) AS class_avg,
+                (
+                    SELECT MAX(qa3.score)
+                    FROM quiz_attempts qa3
+                    JOIN users u3 ON qa3.user_id = u3.id
+                    JOIN students s3 ON u3.id = s3.user_id
+                    WHERE qa3.attempt_number = 1
+                      AND qa3.topic_id = qa.topic_id
+                      AND u3.school_id = u.school_id
+                      AND s3.class = stu.class
+                      AND s3.section_id = stu.section_id
+                ) AS highest_score
+            FROM quiz_attempts qa
+            JOIN topics t ON qa.topic_id = t.id
+            JOIN users u ON qa.user_id = u.id
+            JOIN students stu ON u.id = stu.user_id
+            WHERE qa.user_id = $1
+              AND t.subject_id = $2
+              AND qa.attempt_number = 1;
         `, [studentId, subjectId]);
 
         client.release();
         res.json({ success: true, records: result.rows });
+
     } catch (err) {
         console.error('Fetch student performance error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 app.get('/admin/student-name', async (req, res) => {
     const { studentId } = req.query;
@@ -635,11 +678,12 @@ app.get('/admin/student-subject-name', async (req, res) => {
 });
 
 app.get('/admin/defaulters', async (req, res) => {
-    const { topicId, schoolId } = req.query;
+    const { topicId, schoolId, sectionId } = req.query;
 
     try {
         const client = await pool.connect();
 
+        // Get topic metadata
         const meta = await client.query(
             `SELECT t.class AS classname, s.name AS subject, t.name AS topic
              FROM topics t
@@ -648,17 +692,39 @@ app.get('/admin/defaulters', async (req, res) => {
             [topicId]
         );
 
-        const result = await client.query(`
-            SELECT u.username
-            FROM users u
-            JOIN students s ON u.id = s.user_id
-            JOIN topics t ON t.class = s.class
-            WHERE u.school_id = $1
-              AND t.id = $2
-              AND u.id NOT IN (
-                  SELECT user_id FROM quiz_attempts WHERE topic_id = $2
-              )
-        `, [schoolId, topicId]);
+        if (meta.rows.length === 0) {
+            client.release();
+            return res.status(404).json({ success: false, message: 'Topic not found' });
+        }
+
+        let result;
+
+        if (sectionId) {
+            result = await client.query(`
+                SELECT u.username
+                FROM users u
+                JOIN students s ON u.id = s.user_id
+                JOIN topics t ON t.class = s.class
+                WHERE u.school_id = $1
+                  AND t.id = $2
+                  AND s.section_id = $3
+                  AND u.id NOT IN (
+                      SELECT user_id FROM quiz_attempts WHERE topic_id = $2
+                  )
+            `, [schoolId, topicId, sectionId]);
+        } else {
+            result = await client.query(`
+                SELECT u.username
+                FROM users u
+                JOIN students s ON u.id = s.user_id
+                JOIN topics t ON t.class = s.class
+                WHERE u.school_id = $1
+                  AND t.id = $2
+                  AND u.id NOT IN (
+                      SELECT user_id FROM quiz_attempts WHERE topic_id = $2
+                  )
+            `, [schoolId, topicId]);
+        }
 
         client.release();
 
@@ -667,35 +733,41 @@ app.get('/admin/defaulters', async (req, res) => {
             defaulters: result.rows,
             ...meta.rows[0]
         });
+
     } catch (err) {
         console.error('Fetch defaulters error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
+
 app.post('/teacher/assign-quiz', async (req, res) => {
-    const { schoolId, className, subjectId, topicId, teacherId } = req.body;
+    const { schoolId, className, subjectId, topicId, teacherId, sectionId } = req.body;
 
     try {
         const client = await pool.connect();
 
-        // Optional: check if already assigned
+        // Check if already assigned to same class + section
         const checkResult = await client.query(
             `SELECT id FROM quiz_assignments 
-             WHERE school_id = $1 AND class = $2 AND subject_id = $3 AND topic_id = $4`,
-            [schoolId, className, subjectId, topicId]
+             WHERE school_id = $1 AND class = $2 AND subject_id = $3 AND topic_id = $4
+               AND ${sectionId ? 'section_id = $5' : 'section_id IS NULL'}`,
+            sectionId
+                ? [schoolId, className, subjectId, topicId, sectionId]
+                : [schoolId, className, subjectId, topicId]
         );
 
         if (checkResult.rows.length > 0) {
             client.release();
             return res.status(400).json({ success: false, message: 'Quiz already assigned.' });
         }
-console.log("Inserting quiz with:", { schoolId, className, subjectId, topicId, teacherId });
+
+        console.log("Inserting quiz with:", { schoolId, className, subjectId, topicId, teacherId, sectionId });
 
         await client.query(
-            `INSERT INTO quiz_assignments (school_id, class, subject_id, topic_id, assigned_by)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [schoolId, className, subjectId, topicId, teacherId]
+            `INSERT INTO quiz_assignments (school_id, class, subject_id, topic_id, assigned_by, section_id)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [schoolId, className, subjectId, topicId, teacherId, sectionId || null]
         );
 
         client.release();
@@ -708,24 +780,47 @@ console.log("Inserting quiz with:", { schoolId, className, subjectId, topicId, t
 
 
 app.get('/admin/assigned-topics', async (req, res) => {
-    const { schoolId, className, subjectId } = req.query;
+    const { schoolId, className, subjectId, sectionId } = req.query;
 
     try {
         const client = await pool.connect();
-        const result = await client.query(
-            `SELECT DISTINCT t.id, t.name
-             FROM quiz_assignments qa
-             JOIN topics t ON qa.topic_id = t.id
-             WHERE qa.school_id = $1 AND qa.class = $2 AND qa.subject_id = $3`,
-            [schoolId, className, subjectId]
-        );
+
+        let result;
+
+        if (sectionId) {
+            // Section-specific filtering (and allow section_id = NULL for whole-class quizzes)
+            result = await client.query(
+                `SELECT DISTINCT t.id, t.name
+                 FROM quiz_assignments qa
+                 JOIN topics t ON qa.topic_id = t.id
+                 WHERE qa.school_id = $1
+                   AND qa.class = $2
+                   AND qa.subject_id = $3
+                   AND (qa.section_id = $4 OR qa.section_id IS NULL)`,
+                [schoolId, className, subjectId, sectionId]
+            );
+        } else {
+            // No section filtering — return all for the class
+            result = await client.query(
+                `SELECT DISTINCT t.id, t.name
+                 FROM quiz_assignments qa
+                 JOIN topics t ON qa.topic_id = t.id
+                 WHERE qa.school_id = $1
+                   AND qa.class = $2
+                   AND qa.subject_id = $3`,
+                [schoolId, className, subjectId]
+            );
+        }
+
         client.release();
         res.json({ success: true, topics: result.rows });
+
     } catch (err) {
         console.error('Fetch assigned topics error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 app.get('/admin/question-analysis', async (req, res) => {
     const { topicId, schoolId } = req.query;
 
@@ -853,7 +948,7 @@ app.post('/superadmin/update-questions', async (req, res) => {
 });
 
 app.get('/admin/quiz-count', async (req, res) => {
-    const { schoolId, className, subjectId } = req.query;
+    const { schoolId, className, subjectId, sectionId } = req.query;
 
     if (!schoolId || !className || !subjectId) {
         return res.status(400).json({ success: false, message: 'Missing required parameters' });
@@ -862,33 +957,46 @@ app.get('/admin/quiz-count', async (req, res) => {
     try {
         const client = await pool.connect();
 
-        // Get number of quizzes sent
+        // 1. Get number of quizzes sent
         const quizCountResult = await client.query(`
             SELECT COUNT(*) AS quiz_count
             FROM quiz_assignments qa
             JOIN topics t ON qa.topic_id = t.id
-            WHERE qa.school_id = $1 AND t.class = $2 AND t.subject_id = $3
-        `, [schoolId, className, subjectId]);
+            WHERE qa.school_id = $1 
+              AND qa.class = $2 
+              AND qa.subject_id = $3
+              ${sectionId ? 'AND (qa.section_id = $4 OR qa.section_id IS NULL)' : ''}
+        `, sectionId ? [schoolId, className, subjectId, sectionId] : [schoolId, className, subjectId]);
 
         const quizCount = parseInt(quizCountResult.rows[0]?.quiz_count || 0);
 
-        // Get all students for the class in that school
+        // 2. Get all students for the class (+ section if provided)
         const studentsResult = await client.query(`
-            SELECT id, username FROM users
-            WHERE school_id = $1 AND class = $2 AND role = 'student'
-        `, [schoolId, className]);
+            SELECT u.id, u.username 
+            FROM users u
+            JOIN students s ON u.id = s.user_id
+            WHERE u.school_id = $1 
+              AND s.class = $2 
+              ${sectionId ? 'AND s.section_id = $3' : ''}
+              AND u.role = 'student'
+        `, sectionId ? [schoolId, className, sectionId] : [schoolId, className]);
 
         const students = studentsResult.rows;
 
-        // For each student, get number of attempted quizzes for this subject
+        // 3. For each student, get number of attempted quizzes
         const attemptedResult = await client.query(`
             SELECT u.id AS student_id, COUNT(DISTINCT qa.topic_id) AS attempted
             FROM users u
             JOIN quiz_attempts qa ON qa.user_id = u.id AND qa.attempt_number = 1
             JOIN topics t ON qa.topic_id = t.id
-            WHERE u.school_id = $1 AND u.class = $2 AND u.role = 'student' AND t.subject_id = $3
+            JOIN students s ON u.id = s.user_id
+            WHERE u.school_id = $1 
+              AND s.class = $2 
+              ${sectionId ? 'AND s.section_id = $3' : ''}
+              AND u.role = 'student' 
+              AND t.subject_id = $${sectionId ? 4 : 3}
             GROUP BY u.id
-        `, [schoolId, className, subjectId]);
+        `, sectionId ? [schoolId, className, sectionId, subjectId] : [schoolId, className, subjectId]);
 
         const attemptedMap = {};
         attemptedResult.rows.forEach(row => {
@@ -905,7 +1013,7 @@ app.get('/admin/quiz-count', async (req, res) => {
             };
         });
 
-        // Get subject name
+        // 4. Get subject name
         const subjectResult = await client.query(`SELECT name FROM subjects WHERE id = $1`, [subjectId]);
         const subjectName = subjectResult.rows[0]?.name || '';
 
@@ -924,9 +1032,8 @@ app.get('/admin/quiz-count', async (req, res) => {
     }
 });
 
-
 app.get('/admin/class-details', async (req, res) => {
-    const { topicId, schoolId } = req.query;
+    const { topicId, schoolId, sectionId } = req.query;
 
     try {
         const client = await pool.connect();
@@ -938,19 +1045,40 @@ app.get('/admin/class-details', async (req, res) => {
             WHERE t.id = $1
         `, [topicId]);
 
-        const detailsResult = await client.query(`
-            SELECT u.username, qa.score, qa.time_taken
-            FROM quiz_attempts qa
-            JOIN users u ON qa.user_id = u.id
-            WHERE qa.topic_id = $1 AND qa.attempt_number = 1 AND u.school_id = $2
-            ORDER BY u.username
-        `, [topicId, schoolId]);
-
-        client.release();
-
         if (metaResult.rows.length === 0) {
+            client.release();
             return res.status(404).json({ success: false, message: 'Topic not found' });
         }
+
+        let detailsResult;
+
+        if (sectionId) {
+            // Filter by section
+            detailsResult = await client.query(`
+                SELECT u.username, qa.score, qa.time_taken
+                FROM quiz_attempts qa
+                JOIN users u ON qa.user_id = u.id
+                JOIN students s ON u.id = s.user_id
+                WHERE qa.topic_id = $1 
+                  AND qa.attempt_number = 1 
+                  AND u.school_id = $2
+                  AND s.section_id = $3
+                ORDER BY u.username
+            `, [topicId, schoolId, sectionId]);
+        } else {
+            // All students in the class
+            detailsResult = await client.query(`
+                SELECT u.username, qa.score, qa.time_taken
+                FROM quiz_attempts qa
+                JOIN users u ON qa.user_id = u.id
+                WHERE qa.topic_id = $1 
+                  AND qa.attempt_number = 1 
+                  AND u.school_id = $2
+                ORDER BY u.username
+            `, [topicId, schoolId]);
+        }
+
+        client.release();
 
         res.json({
             success: true,
@@ -963,6 +1091,35 @@ app.get('/admin/class-details', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
+app.get('/admin/sections', async (req, res) => {
+    const { schoolId, className } = req.query;
+
+    if (!schoolId || !className) {
+        return res.status(400).json({ success: false, message: 'Missing schoolId or className' });
+    }
+
+    try {
+        const client = await pool.connect();
+
+        const result = await client.query(
+            `SELECT id, section_name
+             FROM sections
+             WHERE school_id = $1 AND class = $2
+             ORDER BY section_name`,
+            [schoolId, className]
+        );
+
+        client.release();
+
+        res.json({ success: true, sections: result.rows });
+
+    } catch (err) {
+        console.error('Error fetching sections:', err);
+        res.status(500).json({ success: false, message: 'Server error while fetching sections' });
+    }
+});
+
 
 
 

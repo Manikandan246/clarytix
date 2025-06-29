@@ -6,6 +6,7 @@ function QuizCountPage() {
     const [searchParams] = useSearchParams();
     const className = searchParams.get('class');
     const subjectId = searchParams.get('subjectId');
+    const sectionId = searchParams.get('sectionId'); // NEW
     const navigate = useNavigate();
 
     const [schoolLogo, setSchoolLogo] = useState('');
@@ -22,7 +23,12 @@ function QuizCountPage() {
     useEffect(() => {
         if (!className || !subjectId || !schoolId) return;
 
-        fetch(`https://clarytix-backend.onrender.com/admin/quiz-count?schoolId=${schoolId}&className=${className}&subjectId=${subjectId}`)
+        let url = `https://clarytix-backend.onrender.com/admin/quiz-count?schoolId=${schoolId}&className=${className}&subjectId=${subjectId}`;
+        if (sectionId) {
+            url += `&sectionId=${sectionId}`;
+        }
+
+        fetch(url)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -34,13 +40,20 @@ function QuizCountPage() {
                 }
             })
             .catch(() => alert('Error connecting to server'));
-    }, [className, subjectId, schoolId]);
+    }, [className, subjectId, schoolId, sectionId]);
 
     return (
         <div className="vc-container">
             <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
-            <h2>{className} - {subjectName}</h2>
-            <p className="vc-count">Total Number of Quizzes Sent: <strong>{quizCount}</strong></p>
+            <h2>
+                {className}
+                {sectionId ? ` - Section ${sectionId}` : ''}
+                {' - '}
+                {subjectName}
+            </h2>
+            <p className="vc-count">
+                Total Number of Quizzes Sent: <strong>{quizCount}</strong>
+            </p>
 
             <table className="vc-table">
                 <thead>

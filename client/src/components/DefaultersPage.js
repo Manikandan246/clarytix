@@ -11,12 +11,21 @@ function DefaultersPage() {
     const schoolLogo = localStorage.getItem('schoolLogoUrl');
     const schoolId = Number(localStorage.getItem('schoolId'));
 
+    const queryParams = new URLSearchParams(window.location.search);
+    const sectionId = queryParams.get('sectionId');
+
     useEffect(() => {
-          window.scrollTo(0, 0);
+        window.scrollTo(0, 0);
         const fetchDefaulters = async () => {
             try {
-                const response = await fetch(`https://clarytix-backend.onrender.com/admin/defaulters?topicId=${topicId}&schoolId=${schoolId}`);
+                let url = `https://clarytix-backend.onrender.com/admin/defaulters?topicId=${topicId}&schoolId=${schoolId}`;
+                if (sectionId) {
+                    url += `&sectionId=${sectionId}`;
+                }
+
+                const response = await fetch(url);
                 const data = await response.json();
+
                 if (data.success) {
                     setDefaulters(data.defaulters);
                     setTopicDetails({
@@ -35,7 +44,7 @@ function DefaultersPage() {
         };
 
         fetchDefaulters();
-    }, [topicId, schoolId]);
+    }, [topicId, schoolId, sectionId]);
 
     return (
         <div className="defaulters-wrapper">
@@ -43,7 +52,10 @@ function DefaultersPage() {
                 <img src={schoolLogo} alt="School Logo" className="school-logo-large" />
                 <h2>Students Yet to Attempt</h2>
                 <p className="defaulters-subtitle">
-                    {topicDetails.className} - {topicDetails.subject} - {topicDetails.topic}
+                    {topicDetails.className}
+                    {sectionId ? ` - Section ${sectionId}` : ''}
+                    {' - '}
+                    {topicDetails.subject} - {topicDetails.topic}
                 </p>
 
                 {loading ? (
