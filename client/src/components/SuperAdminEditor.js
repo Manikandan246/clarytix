@@ -26,6 +26,8 @@ function SuperAdminEditor() {
 
     const [selectedSections, setSelectedSections] = useState([]);
 const [sectionCreateMsg, setSectionCreateMsg] = useState('');
+const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
+
 
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
@@ -123,7 +125,8 @@ const [sectionCreateMsg, setSectionCreateMsg] = useState('');
     const handleExcelUpload = async () => {
         const formData = new FormData();
         formData.append('file', excelFile);
-        formData.append('schoolId', selectedSchoolId);
+     formData.append('schoolId', selectedUploadSchoolId);
+
 
         const res = await fetch('https://clarytix-backend.onrender.com/superadmin/upload-students', {
             method: 'POST',
@@ -282,6 +285,13 @@ const [sectionCreateMsg, setSectionCreateMsg] = useState('');
 
                 <div>
                     <h4>Upload Student Data (Excel)</h4>
+                    <label>Select School:</label>
+<select value={selectedUploadSchoolId} onChange={e => setSelectedUploadSchoolId(e.target.value)}>
+    <option value="">Select School</option>
+    {schools.map(s => (
+        <option key={s.id} value={s.id}>{s.name}</option>
+    ))}
+</select>
                     <input type="file" accept=".xlsx, .csv" onChange={e => setExcelFile(e.target.files[0])} />
                     <button onClick={handleExcelUpload}>Upload Students</button>
                     {studentUploadMsg && <div className="SuperAdminEditor-message">{studentUploadMsg}</div>}

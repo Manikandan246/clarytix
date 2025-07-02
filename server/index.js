@@ -16,7 +16,9 @@ app.use(cors({
 app.use(express.json()); // to parse JSON bodies
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const upload = multer({ dest: 'uploads/' });
+const storage = multer.memoryStorage(); // store in memory instead of disk
+const upload = multer({ storage: storage });
+
 
 // Login route
 app.post('/login', async (req, res) => {
@@ -1324,7 +1326,7 @@ app.post('/superadmin/create-sections', async (req, res) => {
     const { schoolId, className, sections } = req.body;
 
     if (!schoolId || !className || !Array.isArray(sections)) {
-        return res.status(400).json({ success: false, message: 'Invalid request body' });
+        return res.status(400).json({ success: false, message: 'Invalid input' });
     }
 
     try {
@@ -1332,22 +1334,77 @@ app.post('/superadmin/create-sections', async (req, res) => {
 
         for (const section of sections) {
             await client.query(
-                `
-                INSERT INTO sections (school_id, class, section_name)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (school_id, class, section_name) DO NOTHING
-                `,
-                [schoolId, className, sections]
+                `INSERT INTO sections (school_id, class, section_name)
+                 VALUES ($1, $2, $3)
+                 ON CONFLICT DO NOTHING`,  // optional: avoid duplicates
+                [schoolId, className, section]
             );
         }
 
         client.release();
         res.json({ success: true });
-    } catch (err) {
-        console.error('Error creating sections:', err);
+    } catch (error) {
+        console.error('Error inserting sections:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
+app.post('/superadmin/upload-students', upload.single('file'), async (req, res) => {
+    try {
+        const schoolId = parseInt(req.body.schoolId);
+        const fileBuffer = req.file.buffer;
+
+        const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = xlsx.utils.sheet_to_json(sheet); // expects: username, password, class, section
+
+        for (const row of data) {
+            const { username, password, class: className, section } = row;
+
+            // Insert into users table
+            const userResult = await pool.query(
+                `INSERT INTO users (username, password, role, school_id, class)
+                 VALUES ($1, $2, 'student', $3, $4)
+                 RETURNING id`,
+                [username, password, schoolId, className]
+            );
+
+            const userId = userResult.rows[0].id;
+
+            // Try to get section_id
+            let sectionId = null;
+            if (section) {
+                const sectionResult = await pool.query(
+                    `SELECT id FROM sections
+                     WHERE school_id = $1 AND class = $2 AND section_name = $3`,
+                    [schoolId, className, section]
+                );
+
+                if (sectionResult.rows.length > 0) {
+                    sectionId = sectionResult.rows[0].id;
+                } else {
+                    console.warn(`⚠️ No matching section found for ${className} ${section}, inserting with NULL section_id`);
+                }
+            }
+
+            // Insert into students table
+            await pool.query(
+                `INSERT INTO students (user_id, class, section_id)
+                 VALUES ($1, $2, $3)`,
+                [userId, className, sectionId]
+            );
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('❌ Error uploading students:', err);
+        res.status(500).json({ success: false, message: 'Upload failed' });
+    }
+});
+
+
+
+
 
 
 
