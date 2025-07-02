@@ -136,3 +136,44 @@ input {
     font-size: 14px;
 }
 
+.sc-onboarding-section {
+  margin-top: 40px;
+  padding: 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
+
+.sc-onboarding-section h2 {
+  margin-bottom: 20px;
+  color: #2a2a2a;
+}
+
+.sc-onboarding-section input,
+.sc-onboarding-section select {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 12px;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.sc-onboarding-section select[multiple] {
+  height: 120px;
+}
+
+.sc-onboarding-section button {
+  padding: 8px 16px;
+  margin-top: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sc-onboarding-section button:hover {
+  background-color: #0056b3;
+}
+

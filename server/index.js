@@ -1255,6 +1255,59 @@ app.get('/superadmin/topic-schools', async (req, res) => {
     res.json({ success: true, schoolIds });
 });
 
+app.post('/superadmin/create-school', async (req, res) => {
+    const { name, logo_url } = req.body;
+
+    if (!name || !logo_url) {
+        return res.status(400).json({ success: false, message: 'Missing school name or logo URL' });
+    }
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query(
+            'INSERT INTO schools (name, logo_url) VALUES ($1, $2) RETURNING id',
+            [name, logo_url]
+        );
+        client.release();
+
+        res.json({ success: true, schoolId: result.rows[0].id });
+    } catch (err) {
+        console.error('Error creating school:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+app.post('/superadmin/assign-curriculum', async (req, res) => {
+    const { schoolId, classList, subjectIds } = req.body;
+
+    if (!schoolId || !Array.isArray(classList) || !Array.isArray(subjectIds)) {
+        return res.status(400).json({ success: false, message: 'Invalid request body' });
+    }
+
+    try {
+        const client = await pool.connect();
+
+        for (const className of classList) {
+            for (const subjectId of subjectIds) {
+                await client.query(
+                    `
+                    INSERT INTO school_curriculum (school_id, class, subject_id)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT DO NOTHING
+                    `,
+                    [schoolId, className, subjectId]
+                );
+            }
+        }
+
+        client.release();
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error assigning curriculum:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 
 
 

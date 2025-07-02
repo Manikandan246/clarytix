@@ -12,29 +12,34 @@ function SuperAdminEditor() {
     const [selectedTopicsForSchool, setSelectedTopicsForSchool] = useState([]);
     const [assignMessage, setAssignMessage] = useState('');
 
-    // Load all topics and schools initially
+    // Section 3 states
+    const [newSchoolName, setNewSchoolName] = useState('');
+    const [newSchoolLogo, setNewSchoolLogo] = useState('');
+    const [selectedClass, setSelectedClass] = useState('');
+    const [selectedSubjects, setSelectedSubjects] = useState([]);
+    const [allSubjects, setAllSubjects] = useState([]);
+    const [excelFile, setExcelFile] = useState(null);
+    const [creationMessage, setCreationMessage] = useState('');
+
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
             .then(res => res.json())
-            .then(data => {
-                if (data.success) setTopics(data.topics);
-            });
+            .then(data => { if (data.success) setTopics(data.topics); });
 
         fetch('https://clarytix-backend.onrender.com/superadmin/all-schools')
             .then(res => res.json())
-            .then(data => {
-                if (data.success) setSchools(data.schools);
-            });
+            .then(data => { if (data.success) setSchools(data.schools); });
+
+        fetch('https://clarytix-backend.onrender.com/superadmin/subjects')
+            .then(res => res.json())
+            .then(data => setAllSubjects(data));
     }, []);
 
-    // Load questions when a topic is selected
     useEffect(() => {
         if (selectedTopicId) {
             fetch(`https://clarytix-backend.onrender.com/superadmin/questions?topicId=${selectedTopicId}`)
                 .then(res => res.json())
-                .then(data => {
-                    if (data.success) setQuestions(data.questions);
-                });
+                .then(data => { if (data.success) setQuestions(data.questions); });
         }
     }, [selectedTopicId]);
 
@@ -63,35 +68,67 @@ function SuperAdminEditor() {
         );
     };
 
- const handleAssignTopicsToSchool = async () => {
-    const res = await fetch('https://clarytix-backend.onrender.com/superadmin/assign-topics-to-school', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            schoolId: Number(selectedSchoolId),  // ✅ convert to number
-            topicIds: selectedTopicsForSchool.map(Number) // just in case
-        })
-    });
+    const handleAssignTopicsToSchool = async () => {
+        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/assign-topics-to-school', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                schoolId: Number(selectedSchoolId),
+                topicIds: selectedTopicsForSchool.map(Number)
+            })
+        });
+        const data = await res.json();
+        setAssignMessage(data.success ? 'Topics assigned to school successfully!' : 'Assignment failed.');
+        setTimeout(() => setAssignMessage(''), 3000);
+    };
 
-    const data = await res.json();
-    setAssignMessage(data.success ? 'Topics assigned to school successfully!' : 'Assignment failed.');
-    setTimeout(() => setAssignMessage(''), 3000);
-};
+    const handleSchoolCreation = async () => {
+        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/create-school', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newSchoolName, logo_url: newSchoolLogo })
+        });
+        const data = await res.json();
+        setCreationMessage(data.success ? 'School created successfully!' : 'School creation failed.');
+        setTimeout(() => setCreationMessage(''), 3000);
+    };
 
+    const handleAssignCurriculum = async () => {
+        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/assign-curriculum', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                schoolId: Number(selectedSchoolId),
+                classList: [selectedClass],
+                subjectIds: selectedSubjects.map(Number)
+            })
+        });
+        const data = await res.json();
+        setCreationMessage(data.success ? 'Curriculum assigned successfully!' : 'Assignment failed.');
+        setTimeout(() => setCreationMessage(''), 3000);
+    };
+
+    const handleExcelUpload = async () => {
+        const formData = new FormData();
+        formData.append('file', excelFile);
+        formData.append('schoolId', selectedSchoolId);
+
+        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/upload-students', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        setCreationMessage(data.success ? 'Students uploaded successfully!' : 'Student upload failed.');
+        setTimeout(() => setCreationMessage(''), 3000);
+    };
 
     return (
         <div className="SuperAdminEditor-container">
             {/* Section 1: Question Editor */}
             <h2>SuperAdmin Question Editor</h2>
-            <select
-                className="SuperAdminEditor-dropdown"
-                value={selectedTopicId}
-                onChange={(e) => setSelectedTopicId(e.target.value)}
-            >
+            <select className="SuperAdminEditor-dropdown" value={selectedTopicId} onChange={(e) => setSelectedTopicId(e.target.value)}>
                 <option value="">Select Topic</option>
-                {topics.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
+                {topics.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
             </select>
 
             {questions.length > 0 && (
@@ -99,14 +136,7 @@ function SuperAdminEditor() {
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Question</th>
-                                <th>A</th>
-                                <th>B</th>
-                                <th>C</th>
-                                <th>D</th>
-                                <th>Correct</th>
-                                <th>Explanation</th>
+                                <th>ID</th><th>Question</th><th>A</th><th>B</th><th>C</th><th>D</th><th>Correct</th><th>Explanation</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -132,39 +162,70 @@ function SuperAdminEditor() {
             {/* Section 2: Topic Assignment */}
             <div className="SuperAdminEditor-assign-section">
                 <h2>Assign Topics to School</h2>
-                <select
-                    className="SuperAdminEditor-dropdown"
-                    value={selectedSchoolId}
-                    onChange={(e) => {
-                        setSelectedSchoolId(e.target.value);
-                        setSelectedTopicsForSchool([]); // Reset
-                    }}
-                >
+                <select className="SuperAdminEditor-dropdown" value={selectedSchoolId} onChange={(e) => { setSelectedSchoolId(e.target.value); setSelectedTopicsForSchool([]); }}>
                     <option value="">Select School</option>
-                    {schools.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
+                    {schools.map(s => (<option key={s.id} value={s.id}>{s.name}</option>))}
                 </select>
-
                 {selectedSchoolId && (
                     <div className="SuperAdminEditor-checkbox-grid">
                         {topics.map(topic => (
                             <label key={topic.id}>
-                                <input
-                                    type="checkbox"
-                                    checked={selectedTopicsForSchool.includes(topic.id)}
-                                    onChange={() => handleTopicCheckbox(topic.id)}
-                                />
+                                <input type="checkbox" checked={selectedTopicsForSchool.includes(topic.id)} onChange={() => handleTopicCheckbox(topic.id)} />
                                 {topic.name}
                             </label>
                         ))}
                     </div>
                 )}
-
-                <button className="SuperAdminEditor-update-btn" onClick={handleAssignTopicsToSchool}>
-                    Assign Topics
-                </button>
+                <button className="SuperAdminEditor-update-btn" onClick={handleAssignTopicsToSchool}>Assign Topics</button>
                 {assignMessage && <div className="SuperAdminEditor-message">{assignMessage}</div>}
+            </div>
+
+            {/* Section 3: School Onboarding */}
+            <div className="sc-onboarding-section">
+                <h2>School Onboarding</h2>
+
+                <div>
+                    <input placeholder="School Name" value={newSchoolName} onChange={e => setNewSchoolName(e.target.value)} />
+                    <input placeholder="School Logo URL" value={newSchoolLogo} onChange={e => setNewSchoolLogo(e.target.value)} />
+                    <button onClick={handleSchoolCreation}>Create School</button>
+                </div>
+
+                <div>
+                    <h4>Assign Curriculum</h4>
+                    <label>Select School:</label>
+                    <select value={selectedSchoolId} onChange={e => setSelectedSchoolId(e.target.value)}>
+                        <option value="">Select School</option>
+                        {schools.map(s => (<option key={s.id} value={s.id}>{s.name}</option>))}
+                    </select>
+
+                    <label>Select Class:</label>
+                    <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)}>
+                        <option value="">Select Class</option>
+                        {Array.from({ length: 8 }, (_, i) => `Class ${i + 5}`).map(c => (
+                            <option key={c} value={c}>{c}</option>
+                        ))}
+                    </select>
+
+                    <label>Select Subjects:</label>
+                    <select multiple value={selectedSubjects} onChange={(e) => {
+                        const options = Array.from(e.target.selectedOptions, option => Number(option.value));
+                        setSelectedSubjects(options);
+                    }}>
+                        {allSubjects.map(sub => (
+                            <option key={sub.id} value={sub.id}>{sub.name}</option>
+                        ))}
+                    </select>
+
+                    <button onClick={handleAssignCurriculum}>Assign Subjects</button>
+                </div>
+
+                <div>
+                    <h4>Upload Student Data (Excel)</h4>
+                    <input type="file" accept=".xlsx, .csv" onChange={e => setExcelFile(e.target.files[0])} />
+                    <button onClick={handleExcelUpload}>Upload Students</button>
+                </div>
+
+                {creationMessage && <div className="SuperAdminEditor-message">{creationMessage}</div>}
             </div>
         </div>
     );
