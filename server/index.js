@@ -1308,6 +1308,18 @@ app.post('/superadmin/assign-curriculum', async (req, res) => {
     }
 });
 
+app.get('/superadmin/subjects', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT id, name FROM subjects ORDER BY id');
+        client.release();
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching subjects:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 
 
 
