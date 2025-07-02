@@ -1321,28 +1321,30 @@ app.get('/superadmin/subjects', async (req, res) => {
 });
 
 app.post('/superadmin/create-sections', async (req, res) => {
-    const { schoolId, className, sectionNames } = req.body;
+    const { schoolId, className, sections } = req.body;
 
-    if (!schoolId || !className || !Array.isArray(sectionNames)) {
-        return res.status(400).json({ success: false, message: 'Invalid request' });
+    if (!schoolId || !className || !Array.isArray(sections)) {
+        return res.status(400).json({ success: false, message: 'Invalid request body' });
     }
 
     try {
         const client = await pool.connect();
 
-        for (const section of sectionNames) {
+        for (const section of sections) {
             await client.query(
-                `INSERT INTO sections (school_id, class, section_name)
-                 VALUES ($1, $2, $3)
-                 ON CONFLICT DO NOTHING`,
-                [schoolId, className, section]
+                `
+                INSERT INTO sections (school_id, class, section_name)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (school_id, class, section_name) DO NOTHING
+                `,
+                [schoolId, className, sections]
             );
         }
 
         client.release();
         res.json({ success: true });
     } catch (err) {
-        console.error('Error inserting sections:', err);
+        console.error('Error creating sections:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });

@@ -199,3 +199,12 @@ input {
   padding: 8px;
 }
 
+
+.SuperAdminEditor-container select[multiple] {
+    height: 120px;
+}
+
+.SuperAdminEditor-container div {
+    margin-bottom: 20px;
+}
+
