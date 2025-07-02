@@ -1320,6 +1320,33 @@ app.get('/superadmin/subjects', async (req, res) => {
     }
 });
 
+app.post('/superadmin/create-sections', async (req, res) => {
+    const { schoolId, className, sectionNames } = req.body;
+
+    if (!schoolId || !className || !Array.isArray(sectionNames)) {
+        return res.status(400).json({ success: false, message: 'Invalid request' });
+    }
+
+    try {
+        const client = await pool.connect();
+
+        for (const section of sectionNames) {
+            await client.query(
+                `INSERT INTO sections (school_id, class, section_name)
+                 VALUES ($1, $2, $3)
+                 ON CONFLICT DO NOTHING`,
+                [schoolId, className, section]
+            );
+        }
+
+        client.release();
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error inserting sections:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 
 
 
