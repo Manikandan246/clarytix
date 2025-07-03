@@ -625,7 +625,11 @@ app.get('/admin/student-performance', async (req, res) => {
                       AND qa2.topic_id = qa.topic_id
                       AND u2.school_id = u.school_id
                       AND s2.class = stu.class
-                      AND s2.section_id = stu.section_id
+                      AND (
+                          (stu.section_id IS NULL AND s2.section_id IS NULL)
+                          OR
+                          (stu.section_id IS NOT NULL AND s2.section_id = stu.section_id)
+                      )
                 ) AS class_avg,
                 (
                     SELECT MAX(qa3.score)
@@ -636,7 +640,11 @@ app.get('/admin/student-performance', async (req, res) => {
                       AND qa3.topic_id = qa.topic_id
                       AND u3.school_id = u.school_id
                       AND s3.class = stu.class
-                      AND s3.section_id = stu.section_id
+                      AND (
+                          (stu.section_id IS NULL AND s3.section_id IS NULL)
+                          OR
+                          (stu.section_id IS NOT NULL AND s3.section_id = stu.section_id)
+                      )
                 ) AS highest_score
             FROM quiz_attempts qa
             JOIN topics t ON qa.topic_id = t.id
@@ -665,7 +673,6 @@ app.get('/admin/student-performance', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
 
 
 app.get('/admin/student-name', async (req, res) => {
