@@ -96,7 +96,7 @@ function AdminPerformancePage() {
         return <div>Loading metrics...</div>;
     }
 
-    const scoreBuckets = ['0-20', '21-40', '41-60', '61-80', '81-100'];
+    const scoreBuckets = ['0%-20%', '21%-40%', '41%-60%', '61%-80%', '81%-100%'];
     const bucketCounts = metrics.scoreDistribution;
 
     const leaderboardNames = metrics.leaderboard.map(entry => entry.studentName);
@@ -129,7 +129,7 @@ function AdminPerformancePage() {
                 </div>
                 <div className="metric-card">
                     <p>Average Score</p>
-                    <h3>{metrics.averageScore}</h3>
+                    <h3>{metrics.averageScore}%</h3>
                 </div>
                 <div className="metric-card">
                     <p>Average Time Taken</p>
@@ -137,11 +137,11 @@ function AdminPerformancePage() {
                 </div>
                 <div className="metric-card">
                     <p>Highest Score</p>
-                    <h3>{metrics.highestScore}</h3>
+                    <h3>{metrics.highestScore}%</h3>
                 </div>
                 <div className="metric-card">
                     <p>Lowest Score</p>
-                    <h3>{metrics.lowestScore}</h3>
+                    <h3>{metrics.lowestScore}%</h3>
                 </div>
             </div>
 
@@ -167,17 +167,40 @@ function AdminPerformancePage() {
                         data={{
                             labels: leaderboardNames,
                             datasets: [{
-                                label: 'Score',
+                                label: 'Score (%)',
                                 data: leaderboardScores,
                                 backgroundColor: 'green'
                             }]
                         }}
                         options={{
-                            responsive: true,
-                            indexAxis: 'x',
-                            scales: { x: { ticks: { autoSkip: false } } }
-                        }}
-                    />
+                             responsive: true,
+        indexAxis: 'x',
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: context => `${context.parsed.y}%`
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: value => `${value}%`
+                },
+                title: {
+                    display: true,
+                    text: 'Percentage'
+                }
+            },
+            x: {
+                ticks: {
+                    autoSkip: false
+                }
+            }
+        }
+    }}
+/>
                 </div>
             </div>
 

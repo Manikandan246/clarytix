@@ -346,7 +346,15 @@ app.get('/admin/performance-metrics', async (req, res) => {
 
         const { topic, subject, class: className } = topicInfoResult.rows[0];
 
-        // Fetch quiz attempts (optionally filtered by section)
+        // 🔹 Get number of questions for this topic
+        const questionCountResult = await client.query(
+            `SELECT COUNT(*) FROM questions WHERE topic_id = $1`,
+            [topicId]
+        );
+        const totalQuestions = parseInt(questionCountResult.rows[0].count);
+        const maxPossibleScore = totalQuestions * 10;
+
+        // 🔹 Fetch quiz attempts
         let result;
         if (sectionId) {
             result = await client.query(
@@ -391,17 +399,19 @@ app.get('/admin/performance-metrics', async (req, res) => {
             });
         }
 
-        const scores = attempts.map(a => a.score);
+        // 🔹 Convert raw scores to percentage
+        const percentageScores = attempts.map(a => (a.score / maxPossibleScore) * 100);
         const totalResponses = attempts.length;
-        const averageScore = (scores.reduce((sum, s) => sum + s, 0) / totalResponses).toFixed(1);
-        const highestScore = Math.max(...scores);
-        const lowestScore = Math.min(...scores);
+        const averageScore = (percentageScores.reduce((sum, s) => sum + s, 0) / totalResponses).toFixed(1);
+        const highestScore = Math.max(...percentageScores).toFixed(1);
+        const lowestScore = Math.min(...percentageScores).toFixed(1);
 
         const totalTime = attempts.reduce((sum, a) => sum + (a.time_taken || 0), 0);
         const averageTimeSpentSeconds = Math.round(totalTime / totalResponses);
 
+        // 🔹 Score distribution by percentage ranges
         const distribution = [0, 0, 0, 0, 0];
-        scores.forEach(score => {
+        percentageScores.forEach(score => {
             if (score <= 20) distribution[0]++;
             else if (score <= 40) distribution[1]++;
             else if (score <= 60) distribution[2]++;
@@ -409,7 +419,12 @@ app.get('/admin/performance-metrics', async (req, res) => {
             else distribution[4]++;
         });
 
+        // 🔹 Leaderboard
         const leaderboard = attempts
+            .map(a => ({
+                username: a.username,
+                score: ((a.score / maxPossibleScore) * 100).toFixed(1)
+            }))
             .sort((a, b) => b.score - a.score)
             .slice(0, 10)
             .map(a => ({

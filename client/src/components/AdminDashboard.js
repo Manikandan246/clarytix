@@ -88,17 +88,26 @@ function AdminDashboard() {
 
     // Student-wise
     useEffect(() => {
-        if (selectedClass && selectedSectionId) {
-            fetch(`https://clarytix-backend.onrender.com/admin/students?schoolId=${schoolId}&className=${selectedClass}&sectionId=${selectedSectionId}`)
-                .then(res => res.json())
-                .then(data => {
-                    setStudents(data.success ? data.students : []);
-                    setSelectedStudent('');
-                    setStudentSubjects([]);
-                    setSelectedStudentSubject('');
-                });
+    if (selectedClass) {
+        const queryParams = new URLSearchParams();
+        queryParams.append('schoolId', schoolId);
+        queryParams.append('className', selectedClass);
+
+        if (selectedSectionId) {
+            queryParams.append('sectionId', selectedSectionId);
         }
-    }, [selectedClass, selectedSectionId, schoolId]);
+
+        fetch(`https://clarytix-backend.onrender.com/admin/students?${queryParams.toString()}`)
+            .then(res => res.json())
+            .then(data => {
+                setStudents(data.success ? data.students : []);
+                setSelectedStudent('');
+                setStudentSubjects([]);
+                setSelectedStudentSubject('');
+            });
+    }
+}, [selectedClass, selectedSectionId, schoolId]);
+
 
     useEffect(() => {
         if (selectedStudent) {
