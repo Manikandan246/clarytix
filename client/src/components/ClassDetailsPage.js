@@ -81,7 +81,7 @@ function ClassDetailsPage() {
                     <thead>
                         <tr>
                             <th>Student Name</th>
-                            <th>Score</th>
+                            <th>Percentage</th>
                             <th>Time Taken</th>
                         </tr>
                     </thead>

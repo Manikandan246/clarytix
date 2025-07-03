@@ -610,10 +610,14 @@ app.get('/admin/student-performance', async (req, res) => {
 
         const result = await client.query(`
             SELECT 
+                t.id AS topic_id,
                 t.name AS topic, 
-                qa.score,
-                ROUND((
-                    SELECT AVG(qa2.score)::numeric(10,1)
+                qa.score AS student_score,
+                (
+                    SELECT COUNT(*) FROM questions WHERE topic_id = t.id
+                ) AS total_questions,
+                (
+                    SELECT AVG(qa2.score)
                     FROM quiz_attempts qa2
                     JOIN users u2 ON qa2.user_id = u2.id
                     JOIN students s2 ON u2.id = s2.user_id
@@ -622,7 +626,7 @@ app.get('/admin/student-performance', async (req, res) => {
                       AND u2.school_id = u.school_id
                       AND s2.class = stu.class
                       AND s2.section_id = stu.section_id
-                ), 1) AS class_avg,
+                ) AS class_avg,
                 (
                     SELECT MAX(qa3.score)
                     FROM quiz_attempts qa3
@@ -643,14 +647,25 @@ app.get('/admin/student-performance', async (req, res) => {
               AND qa.attempt_number = 1;
         `, [studentId, subjectId]);
 
+        const updatedRows = result.rows.map(row => {
+            const maxScore = row.total_questions * 10;
+            return {
+                topic: row.topic,
+                score: ((row.student_score / maxScore) * 100).toFixed(1),
+                class_avg: ((row.class_avg / maxScore) * 100).toFixed(1),
+                highest_score: ((row.highest_score / maxScore) * 100).toFixed(1)
+            };
+        });
+
         client.release();
-        res.json({ success: true, records: result.rows });
+        res.json({ success: true, records: updatedRows });
 
     } catch (err) {
         console.error('Fetch student performance error:', err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 
 app.get('/admin/student-name', async (req, res) => {
@@ -1118,10 +1133,17 @@ app.get('/admin/class-details', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Topic not found' });
         }
 
+        // 🔹 Get total questions for topic
+        const countResult = await client.query(
+            `SELECT COUNT(*) FROM questions WHERE topic_id = $1`,
+            [topicId]
+        );
+        const totalQuestions = parseInt(countResult.rows[0].count);
+        const maxScore = totalQuestions * 10;
+
         let detailsResult;
 
         if (sectionId) {
-            // Filter by section
             detailsResult = await client.query(`
                 SELECT u.username, qa.score, qa.time_taken
                 FROM quiz_attempts qa
@@ -1134,7 +1156,6 @@ app.get('/admin/class-details', async (req, res) => {
                 ORDER BY u.username
             `, [topicId, schoolId, sectionId]);
         } else {
-            // All students in the class
             detailsResult = await client.query(`
                 SELECT u.username, qa.score, qa.time_taken
                 FROM quiz_attempts qa
@@ -1146,12 +1167,19 @@ app.get('/admin/class-details', async (req, res) => {
             `, [topicId, schoolId]);
         }
 
+        // 🔹 Convert score to percentage
+        const updatedDetails = detailsResult.rows.map(row => ({
+            username: row.username,
+            score: ((row.score / maxScore) * 100).toFixed(1),
+            time_taken: row.time_taken
+        }));
+
         client.release();
 
         res.json({
             success: true,
             meta: metaResult.rows[0],
-            details: detailsResult.rows
+            details: updatedDetails
         });
 
     } catch (err) {
@@ -1159,6 +1187,7 @@ app.get('/admin/class-details', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
 
 app.get('/admin/sections', async (req, res) => {
     const { schoolId, className } = req.query;

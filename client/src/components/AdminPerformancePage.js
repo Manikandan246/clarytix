@@ -96,7 +96,7 @@ function AdminPerformancePage() {
         return <div>Loading metrics...</div>;
     }
 
-    const scoreBuckets = ['0%-20%', '21%-40%', '41%-60%', '61%-80%', '81%-100%'];
+    const scoreBuckets = ['0-20', '21-40', '41-60', '61-80', '81-100'];
     const bucketCounts = metrics.scoreDistribution;
 
     const leaderboardNames = metrics.leaderboard.map(entry => entry.studentName);
@@ -128,7 +128,7 @@ function AdminPerformancePage() {
                     <h3>{metrics.totalResponses}</h3>
                 </div>
                 <div className="metric-card">
-                    <p>Average Score</p>
+                    <p>Average Percentage Score</p>
                     <h3>{metrics.averageScore}%</h3>
                 </div>
                 <div className="metric-card">
@@ -136,11 +136,11 @@ function AdminPerformancePage() {
                     <h3>{formatSeconds(metrics.averageTimeSpentSeconds)}</h3>
                 </div>
                 <div className="metric-card">
-                    <p>Highest Score</p>
+                    <p>Highest Percentage Score</p>
                     <h3>{metrics.highestScore}%</h3>
                 </div>
                 <div className="metric-card">
-                    <p>Lowest Score</p>
+                    <p>Lowest Percentage Score</p>
                     <h3>{metrics.lowestScore}%</h3>
                 </div>
             </div>
@@ -167,7 +167,7 @@ function AdminPerformancePage() {
                         data={{
                             labels: leaderboardNames,
                             datasets: [{
-                                label: 'Score (%)',
+                                label: 'Percentage',
                                 data: leaderboardScores,
                                 backgroundColor: 'green'
                             }]
@@ -181,24 +181,8 @@ function AdminPerformancePage() {
                     label: context => `${context.parsed.y}%`
                 }
             }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: value => `${value}%`
-                },
-                title: {
-                    display: true,
-                    text: 'Percentage'
-                }
-            },
-            x: {
-                ticks: {
-                    autoSkip: false
-                }
-            }
         }
+        
     }}
 />
                 </div>
