@@ -221,7 +221,7 @@ return (
           <select className="dropdown" value={selectedChapterId} onChange={(e) => setSelectedChapterId(e.target.value)}>
             <option value="">Chapter</option>
             {chapters.map(ch => (
-              <option key={ch.id} value={ch.id}>{ch.name}</option>
+              <option key={ch.id} value={ch.id}>{ch.chapter_name}</option>
             ))}
           </select>
           <select className="dropdown" value={selectedTopicId} onChange={(e) => setSelectedTopicId(e.target.value)}>
@@ -236,48 +236,7 @@ return (
         </div>
       </div>
 
-      {/* View Questions */}
-      <div className="card view-questions-card">
-        <h3 className="card-title">View Questions</h3>
-        <div className="dropdown-row">
-          <select className="dropdown" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
-            <option value="">Class</option>
-            {Array.from({ length: 8 }, (_, i) => (
-              <option key={i + 5} value={`Class ${i + 5}`}>{`Class ${i + 5}`}</option>
-            ))}
-          </select>
-          {sections.length > 0 && (
-            <select className="dropdown" value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)}>
-              <option value="">Section</option>
-              {sections.map(sec => (
-                <option key={sec.id} value={sec.id}>{sec.section_name}</option>
-              ))}
-            </select>
-          )}
-          <select className="dropdown" value={selectedViewSubject} onChange={(e) => setSelectedViewSubject(e.target.value)}>
-            <option value="">Subject</option>
-            {viewSubjects.map(sub => (
-              <option key={sub.id} value={sub.id}>{sub.name}</option>
-            ))}
-          </select>
-          <select className="dropdown" value={selectedViewChapterId} onChange={(e) => setSelectedViewChapterId(e.target.value)}>
-            <option value="">Chapter</option>
-            {viewChapters.map(ch => (
-              <option key={ch.id} value={ch.id}>{ch.name}</option>
-            ))}
-          </select>
-          <select className="dropdown" value={selectedViewTopicId} onChange={(e) => setSelectedViewTopicId(e.target.value)}>
-            <option value="">Topic</option>
-            {viewTopics.map(topic => (
-              <option key={topic.id} value={topic.id}>{topic.name}</option>
-            ))}
-          </select>
-          <button className="track-btn" disabled={!selectedViewTopicId} onClick={handleViewQuestions}>
-            View Questions
-          </button>
-        </div>
-      </div>
-
+      
       {/* Track Performance Student Wise */}
       <div className="card student-card">
         <h3 className="card-title">Track Performance Student Wise</h3>
@@ -313,6 +272,49 @@ return (
           </button>
         </div>
       </div>
+
+      {/* View Questions */}
+      <div className="card view-questions-card">
+        <h3 className="card-title">View Questions</h3>
+        <div className="dropdown-row">
+          <select className="dropdown" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
+            <option value="">Class</option>
+            {Array.from({ length: 8 }, (_, i) => (
+              <option key={i + 5} value={`Class ${i + 5}`}>{`Class ${i + 5}`}</option>
+            ))}
+          </select>
+          {sections.length > 0 && (
+            <select className="dropdown" value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)}>
+              <option value="">Section</option>
+              {sections.map(sec => (
+                <option key={sec.id} value={sec.id}>{sec.section_name}</option>
+              ))}
+            </select>
+          )}
+          <select className="dropdown" value={selectedViewSubject} onChange={(e) => setSelectedViewSubject(e.target.value)}>
+            <option value="">Subject</option>
+            {viewSubjects.map(sub => (
+              <option key={sub.id} value={sub.id}>{sub.name}</option>
+            ))}
+          </select>
+          <select className="dropdown" value={selectedViewChapterId} onChange={(e) => setSelectedViewChapterId(e.target.value)}>
+            <option value="">Chapter</option>
+            {viewChapters.map(ch => (
+              <option key={ch.id} value={ch.id}>{ch.chapter_name}</option>
+            ))}
+          </select>
+          <select className="dropdown" value={selectedViewTopicId} onChange={(e) => setSelectedViewTopicId(e.target.value)}>
+            <option value="">Topic</option>
+            {viewTopics.map(topic => (
+              <option key={topic.id} value={topic.id}>{topic.name}</option>
+            ))}
+          </select>
+          <button className="track-btn" disabled={!selectedViewTopicId} onClick={handleViewQuestions}>
+            View Questions
+          </button>
+        </div>
+      </div>
+
 
       {/* Quiz Count */}
       <div className="card view-count-card">

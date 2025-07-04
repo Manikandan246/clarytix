@@ -1643,7 +1643,7 @@ app.get('/admin/chapters', async (req, res) => {
     const client = await pool.connect();
 
     let query = `
-      SELECT DISTINCT c.id, c.name
+      SELECT DISTINCT c.id, c.chapter_name
       FROM quiz_assignments qa
       JOIN topics t ON qa.topic_id = t.id
       JOIN chapters c ON t.chapter_id = c.id
