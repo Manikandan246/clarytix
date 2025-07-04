@@ -1636,6 +1636,44 @@ app.get('/admin/available-chapters', async (req, res) => {
 });
 
 
+app.get('/admin/chapters', async (req, res) => {
+  const { schoolId, className, subjectId, sectionId } = req.query;
+
+  try {
+    const client = await pool.connect();
+
+    let query = `
+      SELECT DISTINCT c.id, c.name
+      FROM quiz_assignments qa
+      JOIN topics t ON qa.topic_id = t.id
+      JOIN chapters c ON t.chapter_id = c.id
+      WHERE qa.school_id = $1
+        AND qa.class = $2
+        AND qa.subject_id = $3
+    `;
+    const params = [schoolId, className, subjectId];
+    let paramIndex = 4;
+
+    // Optional section filtering (include section_id NULL too)
+    if (sectionId) {
+      query += ` AND (qa.section_id = $${paramIndex} OR qa.section_id IS NULL)`;
+      params.push(sectionId);
+    }
+
+    query += ` ORDER BY c.id`;
+
+    const result = await client.query(query, params);
+    client.release();
+
+    res.json({ success: true, chapters: result.rows });
+  } catch (err) {
+    console.error('Error fetching chapters with assigned quizzes:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
+
 
 
 
