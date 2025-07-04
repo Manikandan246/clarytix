@@ -503,7 +503,7 @@ app.get('/admin/subjects', async (req, res) => {
 
 
 app.get('/admin/topics', async (req, res) => {
-  const { schoolId, className, subjectId, chapterId } = req.query;
+  const { schoolId, className, subjectId, chapterId, sectionId } = req.query;
 
   if (!schoolId || !className || !subjectId) {
     return res.status(400).json({ success: false, message: 'Missing required parameters' });
@@ -517,17 +517,24 @@ app.get('/admin/topics', async (req, res) => {
       WHERE qa.school_id = $1 AND qa.class = $2 AND qa.subject_id = $3
     `;
     const params = [schoolId, className, subjectId];
+    let paramIndex = 4;
 
-    // Optional filtering by chapter
     if (chapterId) {
-      query += ` AND t.chapter_id = $4`;
+      query += ` AND t.chapter_id = $${paramIndex}`;
       params.push(chapterId);
+      paramIndex++;
+    }
+
+    if (sectionId) {
+      query += ` AND (qa.section_id = $${paramIndex} OR qa.section_id IS NULL)`;
+      params.push(sectionId);
     }
 
     const result = await pool.query(query, params);
     res.json({ success: true, topics: result.rows });
+
   } catch (err) {
-    console.error('Error fetching assigned topics:', err);
+    console.error('Error fetching topics:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -832,39 +839,35 @@ app.post('/teacher/assign-quiz', async (req, res) => {
 
 
 app.get('/admin/assigned-topics', async (req, res) => {
-    const { schoolId, className, subjectId, sectionId } = req.query;
+    const { schoolId, className, subjectId, sectionId, chapterId } = req.query;
 
     try {
         const client = await pool.connect();
 
-        let result;
+        let query = `
+            SELECT DISTINCT t.id, t.name
+            FROM quiz_assignments qa
+            JOIN topics t ON qa.topic_id = t.id
+            WHERE qa.school_id = $1
+              AND qa.class = $2
+              AND qa.subject_id = $3
+        `;
+        const params = [schoolId, className, subjectId];
+        let paramIndex = 4;
 
-        if (sectionId) {
-            // Section-specific filtering (and allow section_id = NULL for whole-class quizzes)
-            result = await client.query(
-                `SELECT DISTINCT t.id, t.name
-                 FROM quiz_assignments qa
-                 JOIN topics t ON qa.topic_id = t.id
-                 WHERE qa.school_id = $1
-                   AND qa.class = $2
-                   AND qa.subject_id = $3
-                   AND (qa.section_id = $4 OR qa.section_id IS NULL)`,
-                [schoolId, className, subjectId, sectionId]
-            );
-        } else {
-            // No section filtering — return all for the class
-            result = await client.query(
-                `SELECT DISTINCT t.id, t.name
-                 FROM quiz_assignments qa
-                 JOIN topics t ON qa.topic_id = t.id
-                 WHERE qa.school_id = $1
-                   AND qa.class = $2
-                   AND qa.subject_id = $3`,
-                [schoolId, className, subjectId]
-            );
+        if (chapterId) {
+            query += ` AND t.chapter_id = $${paramIndex++}`;
+            params.push(chapterId);
         }
 
+        if (sectionId) {
+            query += ` AND (qa.section_id = $${paramIndex} OR qa.section_id IS NULL)`;
+            params.push(sectionId);
+        }
+
+        const result = await client.query(query, params);
         client.release();
+
         res.json({ success: true, topics: result.rows });
 
     } catch (err) {

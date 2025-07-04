@@ -160,15 +160,12 @@ function TeacherDashboard() {
                             ))}
                         </select>
 
-                        {chapters.length > 0 && (
-                            <select className="dropdown" value={selectedChapterId} onChange={(e) => setSelectedChapterId(e.target.value)} disabled={!selectedSubject}>
-                                <option value="">Chapter</option>
-                                {chapters.map(ch => (
-                                    <option key={ch.id} value={ch.id}>{ch.chapter_name}</option>
-                                ))}
-                            </select>
-                        )}
-
+                       <select className="dropdown" value={selectedChapterId} onChange={(e) => setSelectedChapterId(e.target.value)} disabled={!selectedSubject || chapters.length === 0}>
+  <option value="">Chapter</option>
+  {chapters.map(ch => (
+    <option key={ch.id} value={ch.id}>{ch.chapter_name}</option>
+  ))}
+</select>
                         <select className="dropdown" value={selectedTopicId} onChange={(e) => setSelectedTopicId(e.target.value)} disabled={!selectedChapterId}>
                             <option value="">Topic</option>
                             {topics.map(topic => (
