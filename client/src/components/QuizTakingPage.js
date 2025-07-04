@@ -11,7 +11,13 @@ function QuizTakingPage({ topicId, onQuizComplete }) {
     const [topic, setTopic] = useState('');
     const [startTime, setStartTime] = useState(null); // ✅ Track start time
 
-    const borderColors = ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#dc3545'];
+   const borderColors = [
+    '#007bff', '#28a745', '#ffc107', '#17a2b8', '#6f42c1',
+    '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#dc3545',
+    '#2f4f4f', '#8b0000', '#b8860b', '#008080', '#483d8b',
+    '#8a2be2', '#3cb371', '#ff1493', '#00bfff', '#ffa500'
+];
+
 
     useEffect(() => {
         const fetchQuestions = async () => {

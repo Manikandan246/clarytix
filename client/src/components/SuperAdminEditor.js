@@ -28,6 +28,12 @@ function SuperAdminEditor() {
 const [sectionCreateMsg, setSectionCreateMsg] = useState('');
 const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
 
+  
+    const [chapterClass, setChapterClass] = useState('');
+    const [chapterSubjectId, setChapterSubjectId] = useState('');
+    const [chapterName, setChapterName] = useState('');
+    const [chapterCreateMsg, setChapterCreateMsg] = useState('');
+
 
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
@@ -50,6 +56,12 @@ const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
                 .then(data => { if (data.success) setQuestions(data.questions); });
         }
     }, [selectedTopicId]);
+
+     useEffect(() => {
+        fetch('https://clarytix-backend.onrender.com/superadmin/subjects')
+            .then(res => res.json())
+            .then(data => setAllSubjects(data));
+    }, []);
 
     const handleChange = (index, field, value) => {
         const updated = [...questions];
@@ -153,6 +165,31 @@ const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
     if (data.success) setSelectedSections([]);
     setTimeout(() => setSectionCreateMsg(''), 3000);
 };
+
+const handleCreateChapter = async () => {
+        if (!chapterClass || !chapterSubjectId || !chapterName) return alert("All fields are required");
+
+        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/create-chapter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                class: chapterClass,
+                subject_id: chapterSubjectId,
+                chapter_name: chapterName
+            })
+        });
+  const data = await res.json();
+        if (data.success) {
+            setChapterCreateMsg('✅ Chapter created successfully!');
+            setChapterClass('');
+            setChapterSubjectId('');
+            setChapterName('');
+        } else {
+            setChapterCreateMsg(data.message || '❌ Error creating chapter');
+        }
+        setTimeout(() => setChapterCreateMsg(''), 3000);
+    };
+
 
     return (
         <div className="SuperAdminEditor-container">
@@ -297,6 +334,42 @@ const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
                     {studentUploadMsg && <div className="SuperAdminEditor-message">{studentUploadMsg}</div>}
                 </div>
             </div>
+            <div><h2>📘 Create Chapter</h2>
+
+            <div className="chapter-form-grid">
+                <select value={chapterClass} onChange={e => setChapterClass(e.target.value)} className="p-2 border rounded">
+                    <option value="">Select Class</option>
+                    {[5,6,7,8,9,10,11,12].map(cls => (
+                        <option key={cls} value={`Class ${cls}`}>{`Class ${cls}`}</option>
+                    ))}
+                </select>
+
+                <select value={chapterSubjectId} onChange={e => setChapterSubjectId(e.target.value)} className="p-2 border rounded">
+                    <option value="">Select Subject</option>
+                    {allSubjects.map(subject => (
+                        <option key={subject.id} value={subject.id}>{subject.name}</option>
+                    ))}
+                </select>
+
+                <input
+                    type="text"
+                    placeholder="Enter Chapter Name"
+                    value={chapterName}
+                    onChange={e => setChapterName(e.target.value)}
+                    className="p-2 border rounded"
+                />
+            </div>
+
+            <button onClick={handleCreateChapter} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Create Chapter
+            </button>
+
+            {chapterCreateMsg && (
+                <div className="mt-2 text-green-600 font-semibold">{chapterCreateMsg}</div>
+            )}
+
+
+</div>
         </div>
     );
 }

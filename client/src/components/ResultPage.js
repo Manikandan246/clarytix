@@ -21,6 +21,11 @@ function ResultPage({ results, onBackToDashboard }) {
                 return (
                     <div key={index} className={cardClass}>
                         <h4>{index + 1}. {result.questionText}</h4>
+                         {result.image_url && (
+            <div className="question-image-wrapper">
+                <img src={result.image_url} alt="Visual related to the question" className="question-image" />
+            </div>
+        )}
                         <p>{result.correct ? '✅ Correct' : '❌ Incorrect'}</p>
                         <p><strong>Correct Answer:</strong> {correctAnswerLetter}: {correctAnswerText}</p>
                         <p className="explanation"><strong>Explanation:</strong> {result.explanation}</p>

@@ -1453,6 +1453,28 @@ app.post('/superadmin/upload-students', upload.single('file'), async (req, res) 
     }
 });
 
+app.post('/superadmin/create-chapter', async (req, res) => {
+    const { class: className, subject_id, chapter_name } = req.body;
+
+    if (!className || !subject_id || !chapter_name) {
+        return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    try {
+        const result = await pool.query(
+            `INSERT INTO chapters (class, subject_id, chapter_name)
+             VALUES ($1, $2, $3) RETURNING id`,
+            [className, subject_id, chapter_name]
+        );
+
+        res.status(201).json({ success: true, chapterId: result.rows[0].id });
+    } catch (error) {
+        console.error('Error creating chapter:', error.message);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+
 
 
 
