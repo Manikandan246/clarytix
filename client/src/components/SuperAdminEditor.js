@@ -35,6 +35,15 @@ const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
     const [chapterCreateMsg, setChapterCreateMsg] = useState('');
 
 
+    const [uploadClass, setUploadClass] = useState('');
+    const [uploadSubjectId, setUploadSubjectId] = useState('');
+    const [uploadChapterId, setUploadChapterId] = useState('');
+    const [uploadTopicName, setUploadTopicName] = useState('');
+    const [uploadFile, setUploadFile] = useState(null);
+    const [uploadMessage, setUploadMessage] = useState('');
+    const [chapters, setChapters] = useState([]);
+
+
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
             .then(res => res.json())
@@ -62,6 +71,14 @@ const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
             .then(res => res.json())
             .then(data => setAllSubjects(data));
     }, []);
+
+        useEffect(() => {
+        if (uploadClass && uploadSubjectId) {
+            fetch(`https://clarytix-backend.onrender.com/superadmin/chapters?class=${uploadClass}&subjectId=${uploadSubjectId}`)
+                .then(res => res.json())
+                .then(data => setChapters(data));
+        }
+    }, [uploadClass, uploadSubjectId]);
 
     const handleChange = (index, field, value) => {
         const updated = [...questions];
@@ -189,6 +206,38 @@ const handleCreateChapter = async () => {
         }
         setTimeout(() => setChapterCreateMsg(''), 3000);
     };
+
+    const handleUploadQuestions = async () => {
+        if (!uploadClass || !uploadSubjectId || !uploadChapterId || !uploadTopicName || !uploadFile) {
+            return alert("All fields are required for uploading questions");
+        }
+
+        const formData = new FormData();
+        formData.append('file', uploadFile);
+        formData.append('class', uploadClass);
+        formData.append('subject_id', uploadSubjectId);
+        formData.append('chapter_id', uploadChapterId);
+        formData.append('topic_name', uploadTopicName);
+
+        const res = await fetch('https://clarytix-backend.onrender.com/superadmin/upload-questions', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            setUploadMessage('✅ Questions uploaded and topic created successfully!');
+            setUploadClass('');
+            setUploadSubjectId('');
+            setUploadChapterId('');
+            setUploadTopicName('');
+            setUploadFile(null);
+        } else {
+            setUploadMessage(data.message || '❌ Upload failed');
+        }
+        setTimeout(() => setUploadMessage(''), 3000);
+    };
+
 
 
     return (
@@ -370,6 +419,54 @@ const handleCreateChapter = async () => {
 
 
 </div>
+
+<div><h2>📥 Upload Questions with Topic</h2>
+            <div className="upload-form-grid">
+                <select value={uploadClass} onChange={e => setUploadClass(e.target.value)} className="p-2 border rounded">
+                    <option value="">Select Class</option>
+                    {[5,6,7,8,9,10,11,12].map(cls => (
+                        <option key={cls} value={`Class ${cls}`}>{`Class ${cls}`}</option>
+                    ))}
+                </select>
+
+                <select value={uploadSubjectId} onChange={e => setUploadSubjectId(e.target.value)} className="p-2 border rounded">
+                    <option value="">Select Subject</option>
+                    {allSubjects.map(subject => (
+                        <option key={subject.id} value={subject.id}>{subject.name}</option>
+                    ))}
+                </select>
+
+                <select value={uploadChapterId} onChange={e => setUploadChapterId(e.target.value)} className="p-2 border rounded">
+                    <option value="">Select Chapter</option>
+                    {chapters.map(ch => (
+                        <option key={ch.id} value={ch.id}>{ch.chapter_name}</option>
+                    ))}
+                </select>
+
+                <input
+                    type="text"
+                    placeholder="Enter Topic Name"
+                    value={uploadTopicName}
+                    onChange={e => setUploadTopicName(e.target.value)}
+                    className="p-2 border rounded"
+                />
+
+                <input
+                    type="file"
+                    accept=".xlsx, .csv"
+                    onChange={e => setUploadFile(e.target.files[0])}
+                    className="p-2"
+                />
+            </div>
+
+            <button onClick={handleUploadQuestions} className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Upload Questions
+            </button>
+
+            {uploadMessage && (
+                <div className="mt-2 text-green-600 font-semibold">{uploadMessage}</div>
+            )}</div>
+            
         </div>
     );
 }

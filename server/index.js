@@ -1474,6 +1474,65 @@ app.post('/superadmin/create-chapter', async (req, res) => {
     }
 });
 
+app.post('/superadmin/upload-questions', upload.single('file'), async (req, res) => {
+  const { class: className, subject_id, chapter_id, topic_name } = req.body;
+  const fileBuffer = req.file?.buffer;
+
+  if (!className || !subject_id || !chapter_id || !topic_name || !fileBuffer) {
+    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Create Topic
+    const topicResult = await client.query(
+      `INSERT INTO topics (name, class, subject_id, chapter_id) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [topic_name, className, subject_id, chapter_id]
+    );
+    const topicId = topicResult.rows[0].id;
+
+    // 2. Parse Excel
+    const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = xlsx.utils.sheet_to_json(sheet);
+
+    // 3. Insert Questions
+    for (const row of rows) {
+      const {
+        question_text,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        correct_answer,
+        explanation,
+        image_url
+      } = row;
+
+      if (!question_text || !option_a || !option_b || !option_c || !option_d || !correct_answer) {
+        throw new Error('Missing required question fields in Excel');
+      }
+
+      await client.query(
+        `INSERT INTO questions (topic_id, class, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, image_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [topicId, className, question_text, option_a, option_b, option_c, option_d, correct_answer.toUpperCase(), explanation || '', image_url || '']
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error uploading questions:', err);
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 
 
 
