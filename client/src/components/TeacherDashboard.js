@@ -12,6 +12,8 @@ function TeacherDashboard() {
     const [selectedSectionId, setSelectedSectionId] = useState('');
     const [subjects, setSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState('');
+    const [chapters, setChapters] = useState([]);
+    const [selectedChapterId, setSelectedChapterId] = useState('');
     const [topics, setTopics] = useState([]);
     const [selectedTopicId, setSelectedTopicId] = useState('');
     const [message, setMessage] = useState('');
@@ -19,7 +21,6 @@ function TeacherDashboard() {
 
     useEffect(() => {
         if (selectedClass) {
-            // Fetch sections for class
             fetch(`https://clarytix-backend.onrender.com/admin/sections?schoolId=${schoolId}&className=${selectedClass}`)
                 .then(res => res.json())
                 .then(data => {
@@ -27,29 +28,49 @@ function TeacherDashboard() {
                     setSelectedSectionId('');
                 });
 
-            // Fetch subjects for class
             fetch(`https://clarytix-backend.onrender.com/admin/subjects?schoolId=${schoolId}&className=${selectedClass}`)
                 .then(res => res.json())
                 .then(data => {
                     setSubjects(data.success ? data.subjects : []);
                     setSelectedSubject('');
+                    setChapters([]);
+                    setSelectedChapterId('');
                     setTopics([]);
                     setSelectedTopicId('');
                 });
         } else {
-            // Reset if no class is selected
             setSections([]);
             setSubjects([]);
+            setChapters([]);
             setTopics([]);
             setSelectedSectionId('');
             setSelectedSubject('');
+            setSelectedChapterId('');
             setSelectedTopicId('');
         }
     }, [selectedClass, schoolId]);
 
     useEffect(() => {
         if (selectedClass && selectedSubject) {
-            fetch(`https://clarytix-backend.onrender.com/admin/topics?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
+            fetch(`https://clarytix-backend.onrender.com/admin/chapters?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
+                .then(res => res.json())
+                .then(data => {
+                    setChapters(data.success ? data.chapters : []);
+                    setSelectedChapterId('');
+                    setTopics([]);
+                    setSelectedTopicId('');
+                });
+        } else {
+            setChapters([]);
+            setSelectedChapterId('');
+            setTopics([]);
+            setSelectedTopicId('');
+        }
+    }, [selectedClass, selectedSubject, schoolId]);
+
+    useEffect(() => {
+        if (selectedChapterId) {
+            fetch(`https://clarytix-backend.onrender.com/admin/topics?schoolId=${schoolId}&chapterId=${selectedChapterId}`)
                 .then(res => res.json())
                 .then(data => {
                     setTopics(data.success ? data.topics : []);
@@ -59,14 +80,16 @@ function TeacherDashboard() {
             setTopics([]);
             setSelectedTopicId('');
         }
-    }, [selectedClass, selectedSubject, schoolId]);
+    }, [selectedChapterId, schoolId]);
 
     const clearForm = () => {
         setSelectedClass('');
         setSelectedSectionId('');
         setSelectedSubject('');
-        setTopics([]);
+        setSelectedChapterId('');
         setSelectedTopicId('');
+        setTopics([]);
+        setChapters([]);
     };
 
     const showMessage = (text, color = 'green') => {
@@ -136,7 +159,16 @@ function TeacherDashboard() {
                             ))}
                         </select>
 
-                        <select className="dropdown" value={selectedTopicId} onChange={(e) => setSelectedTopicId(e.target.value)} disabled={!selectedSubject}>
+                        {chapters.length > 0 && (
+                            <select className="dropdown" value={selectedChapterId} onChange={(e) => setSelectedChapterId(e.target.value)} disabled={!selectedSubject}>
+                                <option value="">Chapter</option>
+                                {chapters.map(ch => (
+                                    <option key={ch.id} value={ch.id}>{ch.chapter_name}</option>
+                                ))}
+                            </select>
+                        )}
+
+                        <select className="dropdown" value={selectedTopicId} onChange={(e) => setSelectedTopicId(e.target.value)} disabled={!selectedChapterId}>
                             <option value="">Topic</option>
                             {topics.map(topic => (
                                 <option key={topic.id} value={topic.id}>{topic.name}</option>
