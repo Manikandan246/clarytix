@@ -1654,7 +1654,6 @@ app.get('/admin/chapters', async (req, res) => {
     const params = [schoolId, className, subjectId];
     let paramIndex = 4;
 
-    // Optional section filtering (include section_id NULL too)
     if (sectionId) {
       query += ` AND (qa.section_id = $${paramIndex} OR qa.section_id IS NULL)`;
       params.push(sectionId);
@@ -1666,11 +1665,13 @@ app.get('/admin/chapters', async (req, res) => {
     client.release();
 
     res.json({ success: true, chapters: result.rows });
+
   } catch (err) {
-    console.error('Error fetching chapters with assigned quizzes:', err);
+    console.error('Error fetching chapters:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 
 
 

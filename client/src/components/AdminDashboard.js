@@ -65,7 +65,7 @@ function AdminDashboard() {
 
   useEffect(() => {
     if (selectedClass && selectedSubject) {
-      fetch(`https://clarytix-backend.onrender.com/admin/chapters?className=${selectedClass}&subjectId=${selectedSubject}`)
+     fetch(`https://clarytix-backend.onrender.com/admin/chapters?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
         .then(res => res.json())
         .then(data => {
           setChapters(data.success ? data.chapters : []);
