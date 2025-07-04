@@ -63,18 +63,20 @@ function AdminDashboard() {
     }
   }, [selectedClass, schoolId]);
 
-  useEffect(() => {
-    if (selectedClass && selectedSubject) {
-     fetch(`https://clarytix-backend.onrender.com/admin/chapters?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
-        .then(res => res.json())
-        .then(data => {
-          setChapters(data.success ? data.chapters : []);
-          setSelectedChapterId('');
-          setTopics([]);
-          setSelectedTopicId('');
-        });
-    }
-  }, [selectedClass, selectedSubject]);
+ useEffect(() => {
+  if (selectedClass && selectedSubject) {
+    fetch(`https://clarytix-backend.onrender.com/admin/chapters?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("📦 Fetched Chapters:", data.chapters);  // Optional debug
+        setChapters(data.success ? data.chapters : []);
+        setSelectedChapterId('');
+        setTopics([]);
+        setSelectedTopicId('');
+      });
+  }
+}, [selectedClass, selectedSubject, schoolId]);
+
 
   useEffect(() => {
     if (selectedClass && selectedSubject && selectedChapterId) {
