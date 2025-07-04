@@ -436,7 +436,8 @@ const handleCreateChapter = async () => {
                     ))}
                 </select>
 
-                <select value={uploadChapterId} onChange={e => setUploadChapterId(e.target.value)} className="p-2 border rounded">
+                <select value={uploadChapterId} onChange={e => setUploadChapterId(Number(e.target.value))} className="p-2 border rounded">
+
                     <option value="">Select Chapter</option>
                     {chapters.map(ch => (
                         <option key={ch.id} value={ch.id}>{ch.chapter_name}</option>
@@ -466,7 +467,7 @@ const handleCreateChapter = async () => {
             {uploadMessage && (
                 <div className="mt-2 text-green-600 font-semibold">{uploadMessage}</div>
             )}</div>
-            
+
         </div>
     );
 }

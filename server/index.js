@@ -1484,7 +1484,9 @@ app.post('/superadmin/create-chapter', async (req, res) => {
 });
 
 app.post('/superadmin/upload-questions', upload.single('file'), async (req, res) => {
-  const { class: className, subject_id, chapter_id, topic_name } = req.body;
+  const { class: className, subject_id, topic_name } = req.body;
+  const chapter_id = Number(req.body.chapter_id);
+
   const fileBuffer = req.file?.buffer;
 
   if (!className || !subject_id || !chapter_id || !topic_name || !fileBuffer) {
