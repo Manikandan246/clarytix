@@ -461,10 +461,17 @@ app.get('/student/old-quizzes', async (req, res) => {
         console.log('Received request to /student/old-quizzes with studentId:', studentId);
 
         const result = await client.query(
-            `SELECT DISTINCT ON (t.id) s.name AS subject, t.name AS topic, t.id AS topic_id, qa.attempt_id
+            `SELECT DISTINCT ON (t.id)
+                s.name AS subject,
+                t.name AS topic,
+                t.id AS topic_id,
+                qa.attempt_id,
+                c.id AS chapter_id,
+                c.chapter_name
              FROM quiz_attempts qa
              JOIN topics t ON qa.topic_id = t.id
              JOIN subjects s ON t.subject_id = s.id
+             JOIN chapters c ON t.chapter_id = c.id
              WHERE qa.user_id = $1 AND qa.attempt_number = 1
              ORDER BY t.id, qa.attempt_id DESC`,
             [studentId]

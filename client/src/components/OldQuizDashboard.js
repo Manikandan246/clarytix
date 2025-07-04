@@ -8,6 +8,7 @@ function OldQuizDashboard() {
     const studentId = localStorage.getItem('userId');
     const [oldQuizzes, setOldQuizzes] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState('');
+    const [selectedChapterId, setSelectedChapterId] = useState('');
     const [selectedTopicId, setSelectedTopicId] = useState('');
     const navigate = useNavigate();
 
@@ -33,8 +34,16 @@ function OldQuizDashboard() {
 
     const subjectOptions = [...new Set(oldQuizzes.map(q => q.subject))];
 
+    const chapterOptions = [
+        ...new Map(
+            oldQuizzes
+                .filter(q => q.subject === selectedSubject)
+                .map(q => [q.chapter_id, { chapter_id: q.chapter_id, chapter_name: q.chapter_name }])
+        ).values()
+    ];
+
     const topicOptions = oldQuizzes
-        .filter(q => q.subject === selectedSubject)
+        .filter(q => q.subject === selectedSubject && q.chapter_id === Number(selectedChapterId))
         .map(q => ({ topic: q.topic, topic_id: q.topic_id }));
 
     const handleRetake = () => {
@@ -60,6 +69,7 @@ function OldQuizDashboard() {
                             value={selectedSubject}
                             onChange={(e) => {
                                 setSelectedSubject(e.target.value);
+                                setSelectedChapterId('');
                                 setSelectedTopicId('');
                             }}
                         >
@@ -71,9 +81,24 @@ function OldQuizDashboard() {
 
                         <select
                             className="dropdown"
+                            value={selectedChapterId}
+                            onChange={(e) => {
+                                setSelectedChapterId(e.target.value);
+                                setSelectedTopicId('');
+                            }}
+                            disabled={!selectedSubject}
+                        >
+                            <option value="">Chapter</option>
+                            {chapterOptions.map((ch, idx) => (
+                                <option key={idx} value={ch.chapter_id}>{ch.chapter_name}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            className="dropdown"
                             value={selectedTopicId}
                             onChange={(e) => setSelectedTopicId(e.target.value)}
-                            disabled={!selectedSubject}
+                            disabled={!selectedChapterId}
                         >
                             <option value="">Select Topic</option>
                             {topicOptions.map((q, idx) => (
@@ -83,7 +108,7 @@ function OldQuizDashboard() {
 
                         <button
                             className="track-btn"
-                            disabled={!selectedSubject || !selectedTopicId}
+                            disabled={!selectedSubject || !selectedChapterId || !selectedTopicId}
                             onClick={handleRetake}
                         >
                             Retake Quiz
