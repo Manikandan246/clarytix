@@ -1535,6 +1535,25 @@ app.post('/superadmin/upload-questions', upload.single('file'), async (req, res)
 
 
 
+app.get('/superadmin/chapters', async (req, res) => {
+  const { class: className, subjectId } = req.query;
+
+  if (!className || !subjectId) {
+    return res.status(400).json({ success: false, message: 'Missing parameters' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id, chapter_name FROM chapters WHERE class = $1 AND subject_id = $2`,
+      [className, subjectId]
+    );
+
+    res.json(result.rows); // or: res.json({ success: true, chapters: result.rows });
+  } catch (err) {
+    console.error('Error fetching chapters:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
 
 
