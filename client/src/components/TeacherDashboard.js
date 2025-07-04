@@ -52,8 +52,8 @@ function TeacherDashboard() {
 
     useEffect(() => {
         if (selectedClass && selectedSubject) {
-            fetch(`https://clarytix-backend.onrender.com/admin/chapters?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
-                .then(res => res.json())
+            fetch(`https://clarytix-backend.onrender.com/admin/available-chapters?schoolId=${schoolId}&className=${selectedClass}&subjectId=${selectedSubject}`)
+              .then(res => res.json())
                 .then(data => {
                     setChapters(data.success ? data.chapters : []);
                     setSelectedChapterId('');
@@ -70,7 +70,8 @@ function TeacherDashboard() {
 
     useEffect(() => {
         if (selectedChapterId) {
-            fetch(`https://clarytix-backend.onrender.com/admin/topics?schoolId=${schoolId}&chapterId=${selectedChapterId}`)
+            fetch(`https://clarytix-backend.onrender.com/admin/available-topics?schoolId=${schoolId}&chapterId=${selectedChapterId}`)
+
                 .then(res => res.json())
                 .then(data => {
                     setTopics(data.success ? data.topics : []);

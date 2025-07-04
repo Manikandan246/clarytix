@@ -503,27 +503,35 @@ app.get('/admin/subjects', async (req, res) => {
 
 
 app.get('/admin/topics', async (req, res) => {
-  const { schoolId, chapterId } = req.query;
+  const { schoolId, className, subjectId, chapterId } = req.query;
 
-  if (!schoolId || !chapterId) {
-    return res.status(400).json({ success: false, message: 'Missing parameters' });
+  if (!schoolId || !className || !subjectId) {
+    return res.status(400).json({ success: false, message: 'Missing required parameters' });
   }
 
   try {
-    const result = await pool.query(
-      `SELECT t.id, t.name
-       FROM topics t
-       JOIN quiz_assignments qa ON qa.topic_id = t.id
-       WHERE qa.school_id = $1 AND t.chapter_id = $2`,
-      [schoolId, chapterId]
-    );
+    let query = `
+      SELECT DISTINCT t.id, t.name
+      FROM topics t
+      JOIN quiz_assignments qa ON qa.topic_id = t.id
+      WHERE qa.school_id = $1 AND qa.class = $2 AND qa.subject_id = $3
+    `;
+    const params = [schoolId, className, subjectId];
 
+    // Optional filtering by chapter
+    if (chapterId) {
+      query += ` AND t.chapter_id = $4`;
+      params.push(chapterId);
+    }
+
+    const result = await pool.query(query, params);
     res.json({ success: true, topics: result.rows });
   } catch (err) {
-    console.error('Error fetching topics:', err);
+    console.error('Error fetching assigned topics:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
 
 
 
@@ -1576,6 +1584,54 @@ app.get('/admin/chapters', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
+app.get('/admin/available-topics', async (req, res) => {
+  const { schoolId, chapterId } = req.query;
+
+  if (!schoolId || !chapterId) {
+    return res.status(400).json({ success: false, message: 'Missing parameters' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT t.id, t.name
+       FROM topics t
+       JOIN school_curriculum_topics sct ON sct.topic_id = t.id
+       WHERE sct.school_id = $1 AND t.chapter_id = $2`,
+      [schoolId, chapterId]
+    );
+
+    res.json({ success: true, topics: result.rows });
+  } catch (err) {
+    console.error('Error fetching available topics:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+app.get('/admin/available-chapters', async (req, res) => {
+  const { schoolId, className, subjectId } = req.query;
+
+  if (!schoolId || !className || !subjectId) {
+    return res.status(400).json({ success: false, message: 'Missing parameters' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT c.id, c.chapter_name
+       FROM chapters c
+       JOIN topics t ON t.chapter_id = c.id
+       JOIN school_curriculum_topics sct ON sct.topic_id = t.id
+       WHERE sct.school_id = $1 AND t.class = $2 AND t.subject_id = $3`,
+      [schoolId, className, subjectId]
+    );
+
+    res.json({ success: true, chapters: result.rows });
+  } catch (err) {
+    console.error('Error fetching available chapters:', err);
+    res.status(500).json({ success: false });
+  }
+});
+
 
 
 
