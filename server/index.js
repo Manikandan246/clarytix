@@ -991,7 +991,7 @@ app.get('/admin/question-analysis', async (req, res) => {
 app.get('/superadmin/all-topics', async (req, res) => {
     try {
         const client = await pool.connect();
-        const result = await client.query('SELECT id, name FROM topics ORDER BY name');
+        const result = await client.query('SELECT id, name FROM topics WHERE chapter_id IS NOT NULL ORDER BY name');
         client.release();
         res.json({ success: true, topics: result.rows });
     } catch (err) {
