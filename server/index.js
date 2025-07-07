@@ -242,7 +242,11 @@ console.log(' Inserting attempt with timeTaken:', timeTaken);
 });
 
 app.get('/student/quizzes', async (req, res) => {
-    const { studentId } = req.query;
+    const studentId = parseInt(req.query.studentId);
+if (!Number.isInteger(studentId)) {
+    return res.status(400).json({ success: false, message: 'Invalid or missing studentId' });
+}
+
 
     try {
         const client = await pool.connect();
@@ -475,7 +479,11 @@ app.get('/admin/performance-metrics', async (req, res) => {
 });
 
 app.get('/student/old-quizzes', async (req, res) => {
-    const { studentId } = req.query;
+    const studentId = parseInt(req.query.studentId);
+if (!Number.isInteger(studentId)) {
+    return res.status(400).json({ success: false, message: 'Invalid or missing studentId' });
+}
+
 
     try {
         const client = await pool.connect();
