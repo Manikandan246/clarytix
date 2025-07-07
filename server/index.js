@@ -262,13 +262,14 @@ app.get('/student/quizzes', async (req, res) => {
             return res.json({ success: true, availableQuizzes: [] });
         }
 
-        const { class: studentClass, section_id: sectionId, school_id: schoolId } = studentResult.rows[0];
+        const { class: studentClass, section_id: rawSectionId, school_id: schoolId } = studentResult.rows[0];
+        const sectionId = rawSectionId !== null && rawSectionId !== 'null' ? rawSectionId : null;
+
         console.log(`Student ${studentId} is in class: ${studentClass}, section: ${sectionId}, school: ${schoolId}`);
 
-        // Step 2: Conditionally build query based on whether sectionId is null
         let quizResult;
 
-        if (sectionId !== null && sectionId !== undefined) {
+        if (sectionId !== null) {
             // Section exists → match section or sectionless quizzes
             quizResult = await client.query(
                 `SELECT DISTINCT t.id AS topic_id, s.name AS subject, t.name AS topic
