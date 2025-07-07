@@ -241,7 +241,6 @@ console.log(' Inserting attempt with timeTaken:', timeTaken);
     }
 });
 
-
 app.get('/student/quizzes', async (req, res) => {
     const { studentId } = req.query;
 
@@ -266,21 +265,42 @@ app.get('/student/quizzes', async (req, res) => {
         const { class: studentClass, section_id: sectionId, school_id: schoolId } = studentResult.rows[0];
         console.log(`Student ${studentId} is in class: ${studentClass}, section: ${sectionId}, school: ${schoolId}`);
 
-        // Step 2: Fetch quizzes assigned to the student's class and section or to the whole class
-        const quizResult = await client.query(
-            `SELECT DISTINCT t.id AS topic_id, s.name AS subject, t.name AS topic
-             FROM quiz_assignments qa
-             JOIN topics t ON qa.topic_id = t.id
-             JOIN subjects s ON qa.subject_id = s.id
-             WHERE qa.class = $1
-               AND qa.school_id = $2
-               AND (qa.section_id = $3 OR qa.section_id IS NULL)
-               AND NOT EXISTS (
-                   SELECT 1 FROM quiz_attempts a
-                   WHERE a.user_id = $4 AND a.topic_id = qa.topic_id
-               )`,
-            [studentClass, schoolId, sectionId, studentId]
-        );
+        // Step 2: Conditionally build query based on whether sectionId is null
+        let quizResult;
+
+        if (sectionId !== null && sectionId !== undefined) {
+            // Section exists → match section or sectionless quizzes
+            quizResult = await client.query(
+                `SELECT DISTINCT t.id AS topic_id, s.name AS subject, t.name AS topic
+                 FROM quiz_assignments qa
+                 JOIN topics t ON qa.topic_id = t.id
+                 JOIN subjects s ON qa.subject_id = s.id
+                 WHERE qa.class = $1
+                   AND qa.school_id = $2
+                   AND (qa.section_id = $3 OR qa.section_id IS NULL)
+                   AND NOT EXISTS (
+                       SELECT 1 FROM quiz_attempts a
+                       WHERE a.user_id = $4 AND a.topic_id = qa.topic_id
+                   )`,
+                [studentClass, schoolId, sectionId, studentId]
+            );
+        } else {
+            // No section → only get quizzes assigned without section
+            quizResult = await client.query(
+                `SELECT DISTINCT t.id AS topic_id, s.name AS subject, t.name AS topic
+                 FROM quiz_assignments qa
+                 JOIN topics t ON qa.topic_id = t.id
+                 JOIN subjects s ON qa.subject_id = s.id
+                 WHERE qa.class = $1
+                   AND qa.school_id = $2
+                   AND qa.section_id IS NULL
+                   AND NOT EXISTS (
+                       SELECT 1 FROM quiz_attempts a
+                       WHERE a.user_id = $3 AND a.topic_id = qa.topic_id
+                   )`,
+                [studentClass, schoolId, studentId]
+            );
+        }
 
         client.release();
         res.json({ success: true, availableQuizzes: quizResult.rows });
