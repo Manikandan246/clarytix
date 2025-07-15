@@ -43,6 +43,10 @@ const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
     const [uploadMessage, setUploadMessage] = useState('');
     const [chapters, setChapters] = useState([]);
 
+    const [filteredTopics, setFilteredTopics] = useState([]);
+const [assignClass, setAssignClass] = useState('');
+const [assignSubjectId, setAssignSubjectId] = useState('');
+
 
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
@@ -238,6 +242,8 @@ const handleCreateChapter = async () => {
         setTimeout(() => setUploadMessage(''), 3000);
     };
 
+  
+
 
 
     return (
@@ -275,26 +281,108 @@ const handleCreateChapter = async () => {
                 </div>
             )}
 
-            {/* Section 2: Topic Assignment */}
-            <div className="SuperAdminEditor-assign-section">
-                <h2>Assign Topics to School</h2>
-                <select className="SuperAdminEditor-dropdown" value={selectedSchoolId} onChange={(e) => { setSelectedSchoolId(e.target.value); setSelectedTopicsForSchool([]); }}>
-                    <option value="">Select School</option>
-                    {schools.map(s => (<option key={s.id} value={s.id}>{s.name}</option>))}
-                </select>
-                {selectedSchoolId && (
-                    <div className="SuperAdminEditor-checkbox-grid">
-                        {topics.map(topic => (
-                            <label key={topic.id}>
-                                <input type="checkbox" checked={selectedTopicsForSchool.includes(topic.id)} onChange={() => handleTopicCheckbox(topic.id)} />
-                                {topic.name}
-                            </label>
-                        ))}
-                    </div>
-                )}
-                <button className="SuperAdminEditor-update-btn" onClick={handleAssignTopicsToSchool}>Assign Topics</button>
-                {assignMessage && <div className="SuperAdminEditor-message">{assignMessage}</div>}
-            </div>
+      <div className="SuperAdminEditor-assign-section">
+  <h2>Assign Topics to School</h2>
+
+  {/* Select School */}
+  <label>Select School:</label>
+  <select
+    className="SuperAdminEditor-dropdown"
+    value={selectedSchoolId}
+    onChange={(e) => {
+      setSelectedSchoolId(e.target.value);
+      setAssignClass('');
+      setAssignSubjectId('');
+      setFilteredTopics([]);
+      setSelectedTopicsForSchool([]);
+    }}
+  >
+    <option value="">Select School</option>
+    {schools.map(s => (
+      <option key={s.id} value={s.id}>{s.name}</option>
+    ))}
+  </select>
+
+  {/* Select Class */}
+  {selectedSchoolId && (
+    <>
+      <label>Select Class:</label>
+      <select
+        className="SuperAdminEditor-dropdown"
+        value={assignClass}
+        onChange={(e) => {
+          setAssignClass(e.target.value);
+          setAssignSubjectId('');
+          setFilteredTopics([]);
+          setSelectedTopicsForSchool([]);
+        }}
+      >
+        <option value="">Select Class</option>
+        {[5, 6, 7, 8, 9, 10, 11, 12].map(cls => (
+          <option key={cls} value={`Class ${cls}`}>{`Class ${cls}`}</option>
+        ))}
+      </select>
+    </>
+  )}
+
+  {/* Select Subject */}
+  {assignClass && (
+    <>
+      <label>Select Subject:</label>
+      <select
+        className="SuperAdminEditor-dropdown"
+        value={assignSubjectId}
+        onChange={async (e) => {
+          const subjectId = e.target.value;
+          setAssignSubjectId(subjectId);
+          setSelectedTopicsForSchool([]);
+          try {
+            const res = await fetch(`https://clarytix-backend.onrender.com/superadmin/topics?class=${assignClass}&subjectId=${subjectId}`);
+            const data = await res.json();
+            if (data.success) {
+              setFilteredTopics(data.topics);
+            }
+          } catch (err) {
+            console.error('Error fetching topics:', err);
+          }
+        }}
+      >
+        <option value="">Select Subject</option>
+        {allSubjects.map(subject => (
+          <option key={subject.id} value={subject.id}>{subject.name}</option>
+        ))}
+      </select>
+    </>
+  )}
+
+  {/* Topic Multi-Select */}
+  {filteredTopics.length > 0 && (
+    <div className="SuperAdminEditor-checkbox-grid">
+      {filteredTopics.map(topic => (
+        <label key={topic.id}>
+          <input
+            type="checkbox"
+            checked={selectedTopicsForSchool.includes(topic.id)}
+            onChange={() => handleTopicCheckbox(topic.id)}
+          />
+          {topic.name}
+        </label>
+      ))}
+    </div>
+  )}
+
+  {/* Assign Button */}
+  <button
+    className="SuperAdminEditor-update-btn"
+    onClick={handleAssignTopicsToSchool}
+    disabled={!selectedSchoolId || !assignClass || !assignSubjectId || selectedTopicsForSchool.length === 0}
+  >
+    Assign Topics
+  </button>
+
+  {assignMessage && <div className="SuperAdminEditor-message">{assignMessage}</div>}
+</div>
+
 
             {/* Section 3: School Onboarding */}
             <div className="sc-onboarding-section">

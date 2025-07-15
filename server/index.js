@@ -1711,6 +1711,25 @@ app.get('/admin/chapters', async (req, res) => {
 });
 
 
+app.get('/superadmin/topics', async (req, res) => {
+    const { class: className, subjectId } = req.query;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query(
+            'SELECT id, name FROM topics WHERE class = $1 AND subject_id = $2',
+            [className, subjectId]
+        );
+        client.release();
+        res.json({ success: true, topics: result.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Error fetching topics' });
+    }
+});
+
+
+
 
 
 
