@@ -47,6 +47,10 @@ const [selectedUploadSchoolId, setSelectedUploadSchoolId] = useState('');
 const [assignClass, setAssignClass] = useState('');
 const [assignSubjectId, setAssignSubjectId] = useState('');
 
+const [countSchoolId, setCountSchoolId] = useState('');
+const [countClass, setCountClass] = useState('');
+const [quizCountResult, setQuizCountResult] = useState([]);
+
 
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
@@ -241,6 +245,19 @@ const handleCreateChapter = async () => {
         }
         setTimeout(() => setUploadMessage(''), 3000);
     };
+
+    const handleFetchQuizCounts = async () => {
+    if (!countSchoolId || !countClass) return;
+
+    try {
+        const res = await fetch(`https://clarytix-backend.onrender.com/superadmin/quiz-summary?schoolId=${countSchoolId}&class=${countClass}`);
+        const data = await res.json();
+        setQuizCountResult(data);
+    } catch (err) {
+        console.error("Failed to fetch quiz count:", err);
+    }
+};
+
 
   
 
@@ -555,6 +572,68 @@ const handleCreateChapter = async () => {
             {uploadMessage && (
                 <div className="mt-2 text-green-600 font-semibold">{uploadMessage}</div>
             )}</div>
+
+            <div className="SuperAdminEditor-count-section">
+  <h2>📊 Quiz Assignment Count</h2>
+
+  <div className="count-form-grid">
+    <select
+      className="p-2 border rounded"
+      value={countSchoolId}
+      onChange={(e) => setCountSchoolId(e.target.value)}
+    >
+      <option value="">Select School</option>
+      {schools.map((school) => (
+        <option key={school.id} value={school.id}>{school.name}</option>
+      ))}
+    </select>
+
+    <select
+      className="p-2 border rounded"
+      value={countClass}
+      onChange={(e) => setCountClass(e.target.value)}
+    >
+      <option value="">Select Class</option>
+      {[5, 6, 7, 8, 9, 10, 11, 12].map(cls => (
+        <option key={cls} value={`Class ${cls}`}>{`Class ${cls}`}</option>
+      ))}
+    </select>
+
+    <button
+      onClick={handleFetchQuizCounts}
+      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      disabled={!countSchoolId || !countClass}
+    >
+      Get Count
+    </button>
+  </div>
+
+  {quizCountResult.length > 0 && (
+    <div className="mt-4">
+      <table className="w-full border text-left">
+        <thead>
+          <tr>
+            <th className="border px-2 py-1">Class</th>
+            <th className="border px-2 py-1">Subject</th>
+            <th className="border px-2 py-1">No. of Quizzes Assigned</th>
+            <th className="border px-2 py-1">Total No. of Quizzes Available</th>
+          </tr>
+        </thead>
+        <tbody>
+          {quizCountResult.map((row, index) => (
+            <tr key={index}>
+              <td className="border px-2 py-1">{row.class_name}</td>
+              <td className="border px-2 py-1">{row.subject_name}</td>
+              <td className="border px-2 py-1">{row.assigned_count}</td>
+              <td className="border px-2 py-1">{row.total_available}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
 
         </div>
     );

@@ -1728,6 +1728,44 @@ app.get('/superadmin/topics', async (req, res) => {
     }
 });
 
+app.get('/superadmin/quiz-count', async (req, res) => {
+  const { schoolId, class: className } = req.query;
+
+  try {
+    const subjectsResult = await pool.query(`SELECT id, name FROM subjects`);
+    const subjects = subjectsResult.rows;
+
+    const result = await Promise.all(subjects.map(async (subject) => {
+      const assignedCountResult = await pool.query(
+        `SELECT COUNT(*) FROM quiz_assignments qa
+         JOIN topics t ON qa.topic_id = t.id
+         WHERE qa.school_id = $1 AND t.class = $2 AND t.subject_id = $3`,
+        [schoolId, className, subject.id]
+      );
+
+      const totalCountResult = await pool.query(
+        `SELECT COUNT(*) FROM school_curriculum_topics sct
+         JOIN topics t ON sct.topic_id = t.id
+         WHERE sct.school_id = $1 AND t.class = $2 AND t.subject_id = $3`,
+        [schoolId, className, subject.id]
+      );
+
+      return {
+        class_name: className,
+        subject_name: subject.name,
+        assigned_count: parseInt(assignedCountResult.rows[0].count, 10),
+        total_available: parseInt(totalCountResult.rows[0].count, 10),
+      };
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching quiz count:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 
 
 
