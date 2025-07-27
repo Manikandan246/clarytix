@@ -1732,7 +1732,7 @@ app.get('/superadmin/quiz-summary', async (req, res) => {
   const { schoolId, class: className } = req.query;
 
   try {
-    // Get subjects only for that school and class from school_curriculum
+    // Fetch only subjects assigned to the school and class
     const subjectResult = await pool.query(
       `SELECT s.id, s.name FROM school_curriculum sc
        JOIN subjects s ON sc.subject_id = s.id
@@ -1742,15 +1742,15 @@ app.get('/superadmin/quiz-summary', async (req, res) => {
     const subjects = subjectResult.rows;
 
     const result = await Promise.all(subjects.map(async (subject) => {
-      // Count of assigned quizzes for that subject
+      // Assigned quizzes (count DISTINCT topic_id to avoid duplicates from multiple sections)
       const assignedCountResult = await pool.query(
-        `SELECT COUNT(*) FROM quiz_assignments qa
+        `SELECT COUNT(DISTINCT qa.topic_id) FROM quiz_assignments qa
          JOIN topics t ON qa.topic_id = t.id
          WHERE qa.school_id = $1 AND t.class = $2 AND t.subject_id = $3`,
         [schoolId, className, subject.id]
       );
 
-      // Total topics assigned to school for that subject
+      // Total quizzes available from curriculum assignment
       const totalCountResult = await pool.query(
         `SELECT COUNT(*) FROM school_curriculum_topics sct
          JOIN topics t ON sct.topic_id = t.id
@@ -1772,6 +1772,7 @@ app.get('/superadmin/quiz-summary', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
 
