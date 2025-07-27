@@ -1728,7 +1728,7 @@ app.get('/superadmin/topics', async (req, res) => {
     }
 });
 
-app.get('/superadmin/quiz-count', async (req, res) => {
+app.get('/superadmin/quiz-summary', async (req, res) => {
   const { schoolId, class: className } = req.query;
 
   try {
