@@ -1094,7 +1094,7 @@ app.get('/admin/quiz-count', async (req, res) => {
 
         // 1. Get number of quizzes sent
         const quizCountResult = await client.query(`
-            SELECT COUNT(*) AS quiz_count
+            SELECT COUNT(DISTINCT qa.topic_id) AS quiz_count
             FROM quiz_assignments qa
             JOIN topics t ON qa.topic_id = t.id
             WHERE qa.school_id = $1 
