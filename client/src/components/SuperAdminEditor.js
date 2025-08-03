@@ -51,6 +51,10 @@ const [countSchoolId, setCountSchoolId] = useState('');
 const [countClass, setCountClass] = useState('');
 const [quizCountResult, setQuizCountResult] = useState([]);
 
+const [assignChapterId, setAssignChapterId] = useState('');
+const [assignChapters, setAssignChapters] = useState([]);
+
+
 
     useEffect(() => {
         fetch('https://clarytix-backend.onrender.com/superadmin/all-topics')
@@ -349,20 +353,29 @@ const handleCreateChapter = async () => {
       <select
         className="SuperAdminEditor-dropdown"
         value={assignSubjectId}
-        onChange={async (e) => {
-          const subjectId = e.target.value;
-          setAssignSubjectId(subjectId);
-          setSelectedTopicsForSchool([]);
-          try {
-            const res = await fetch(`https://clarytix-backend.onrender.com/superadmin/topics?class=${assignClass}&subjectId=${subjectId}`);
-            const data = await res.json();
-            if (data.success) {
-              setFilteredTopics(data.topics);
-            }
-          } catch (err) {
-            console.error('Error fetching topics:', err);
-          }
-        }}
+   onChange={async (e) => {
+  const subjectId = e.target.value;
+  setAssignSubjectId(subjectId);
+  setAssignChapterId('');
+  setFilteredTopics([]);
+  setSelectedTopicsForSchool([]);
+  setAssignChapters([]);
+
+  try {
+    const chapterRes = await fetch(
+      `https://clarytix-backend.onrender.com/superadmin/chapters?class=${assignClass}&subjectId=${subjectId}`
+    );
+    const chapterData = await chapterRes.json();
+    if (Array.isArray(chapterData)) {
+      setAssignChapters(chapterData);
+    } else {
+      setAssignChapters([]);
+    }
+  } catch (err) {
+    console.error('Error fetching chapters:', err);
+  }
+}}
+
       >
         <option value="">Select Subject</option>
         {allSubjects.map(subject => (
@@ -371,6 +384,44 @@ const handleCreateChapter = async () => {
       </select>
     </>
   )}
+
+{/* Chapter Dropdown */}
+{assignChapters.length > 0 && (
+  <>
+    <label>Select Chapter:</label>
+    <select
+      className="SuperAdminEditor-dropdown"
+      value={assignChapterId}
+      onChange={async (e) => {
+        const chapterId = e.target.value;
+        setAssignChapterId(chapterId);
+        setSelectedTopicsForSchool([]);
+
+        if (!assignClass || !assignSubjectId || !chapterId) return;
+
+        try {
+          const res = await fetch(
+            `https://clarytix-backend.onrender.com/superadmin/topics?class=${assignClass}&subjectId=${assignSubjectId}&chapterId=${chapterId}`
+          );
+          const data = await res.json();
+          if (data.success) {
+            setFilteredTopics(data.topics);
+          } else {
+            setFilteredTopics([]);
+          }
+        } catch (err) {
+          console.error('Error fetching filtered topics:', err);
+        }
+      }}
+    >
+      <option value="">Select Chapter</option>
+      {assignChapters.map(ch => (
+        <option key={ch.id} value={ch.id}>{ch.chapter_name}</option>
+      ))}
+    </select>
+  </>
+)}
+
 
   {/* Topic Multi-Select */}
   {filteredTopics.length > 0 && (

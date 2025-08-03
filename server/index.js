@@ -1712,14 +1712,20 @@ app.get('/admin/chapters', async (req, res) => {
 
 
 app.get('/superadmin/topics', async (req, res) => {
-    const { class: className, subjectId } = req.query;
+    const { class: className, subjectId, chapterId } = req.query;
+
+    if (!className || !subjectId || !chapterId) {
+        return res.status(400).json({ success: false, message: 'Missing class, subjectId, or chapterId' });
+    }
 
     try {
         const client = await pool.connect();
+
         const result = await client.query(
-            'SELECT id, name FROM topics WHERE class = $1 AND subject_id = $2',
-            [className, subjectId]
+            'SELECT id, name FROM topics WHERE class = $1 AND subject_id = $2 AND chapter_id = $3',
+            [className, subjectId, chapterId]
         );
+
         client.release();
         res.json({ success: true, topics: result.rows });
     } catch (err) {
@@ -1727,6 +1733,7 @@ app.get('/superadmin/topics', async (req, res) => {
         res.status(500).json({ success: false, message: 'Error fetching topics' });
     }
 });
+
 
 app.get('/superadmin/quiz-summary', async (req, res) => {
   const { schoolId, class: className } = req.query;
